@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Pingnom",
+    "slug": "pingnom",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#FF6B35"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pingnom.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FF6B35"
+      },
+      "package": "com.pingnom.app"
+    },
+    "web": {},
+    "plugins": [
+      "expo-location"
+    ]
+  }
+}
