@@ -81,7 +81,7 @@ To make spontaneous dining with friends as easy as sending a text, creating a wo
 
 - **Frontend**: React Native with Expo Go (iOS only)
 - **Backend**: Golang
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL(Use an in-memory database before the feature is completed.)
 - **Real-time**: Socket.io
 - **Maps**: Google Maps API
 
