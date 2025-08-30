@@ -1,0 +1,23 @@
+# Claude 相關檔案
+CLAUDE.md
+
+# 常見的忽略檔案
+node_modules/
+*.log
+.env
+.env.local
+.env.production
+.env.test
+dist/
+build/
+coverage/
+
+# IDE 檔案
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 作業系統檔案
+.DS_Store
+Thumbs.db
