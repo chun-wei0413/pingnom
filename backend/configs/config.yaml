@@ -1,0 +1,40 @@
+# Pingnom API Configuration
+
+environment: development
+log_level: info
+
+server:
+  host: localhost
+  port: 8080
+  read_timeout: 15s
+  write_timeout: 15s
+  idle_timeout: 60s
+  shutdown_timeout: 5s
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:19006"  # Expo Dev Server
+    allowed_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed_headers:
+      - "*"
+    allow_credentials: true
+    max_age: 86400
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: password
+  dbname: pingnom_dev
+  sslmode: disable
+
+jwt:
+  secret: "your-development-secret-key-change-in-production"
+  access_token_ttl: 24h
+  refresh_token_ttl: 168h  # 7 days
+  issuer: "pingnom-api"
