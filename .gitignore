@@ -1,5 +1,6 @@
 # Claude 相關檔案
 CLAUDE.md
+.claude/
 
 # 常見的忽略檔案
 node_modules/
