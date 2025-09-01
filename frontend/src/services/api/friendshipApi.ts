@@ -81,7 +81,7 @@ export const friendshipApi = {
 
   // Get friends list
   getFriends: async (limit: number = 50, offset: number = 0): Promise<FriendsResponse> => {
-    const response = await apiClient.get('/friends', {
+    const response = await apiClient.get('/friends/', {
       limit, offset
     });
     return response.data;

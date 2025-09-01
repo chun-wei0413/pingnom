@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User, RegisterRequest, LoginRequest, RegisterResponse, LoginResponse } from '@/types/user';
 import { userApi } from '@/services/api/userApi';
+import { apiClient } from '@/services/api/apiClient';
 
 export interface AuthState {
   user: User | null;
@@ -83,6 +84,8 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
+      // Clear token from apiClient
+      apiClient.setAccessToken(null);
     },
     clearError: (state) => {
       state.error = null;
@@ -91,6 +94,8 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
+      // Sync token to apiClient
+      apiClient.setAccessToken(action.payload.accessToken);
     },
   },
   extraReducers: (builder) => {
@@ -146,6 +151,8 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
         state.refreshToken = null; // 目前後端沒有實作 refresh token
         state.isAuthenticated = true;
+        // Ensure apiClient has the token (redundant but ensures synchronization)
+        apiClient.setAccessToken(action.payload.accessToken);
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;

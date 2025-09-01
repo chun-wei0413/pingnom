@@ -9,6 +9,7 @@ import ProfileScreen from '@/screens/profile/ProfileScreen';
 import PingsScreen from '@/screens/pings/PingsScreen';
 import CreatePingScreen from '@/screens/pings/CreatePingScreen';
 import FriendsScreen from '@/screens/friends/FriendsScreen';
+import SearchUsersScreen from '@/screens/friends/SearchUsersScreen';
 
 // Placeholder screens for development
 const PlaceholderScreen: React.FC<{ title: string }> = ({ title }) => {
@@ -31,7 +32,16 @@ const PingsNavigator = () => {
   );
 };
 
-// FriendsScreen is now imported from screens/friends/FriendsScreen.tsx
+// Create stack navigator for Friends tab
+const FriendsStack = createStackNavigator();
+const FriendsNavigator = () => {
+  return (
+    <FriendsStack.Navigator screenOptions={{ headerShown: false }}>
+      <FriendsStack.Screen name="FriendsList" component={FriendsScreen} />
+      <FriendsStack.Screen name="SearchUsers" component={SearchUsersScreen} />
+    </FriendsStack.Navigator>
+  );
+};
 
 const Tab = createBottomTabNavigator<HomeTabsParamList>();
 
@@ -85,7 +95,7 @@ const MainNavigator: React.FC = () => {
       />
       <Tab.Screen 
         name="Friends" 
-        component={FriendsScreen}
+        component={FriendsNavigator}
         options={{ tabBarLabel: '朋友' }}
       />
       <Tab.Screen 

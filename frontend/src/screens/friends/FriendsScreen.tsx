@@ -37,7 +37,10 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
     isAccepting,
     isDeclining,
     isRemoving,
-    error 
+    error,
+    friendsError,
+    pendingError,
+    sentError
   } = useAppSelector((state) => state.friendship);
   
   const [activeTab, setActiveTab] = useState<'friends' | 'pending' | 'sent'>('friends');
@@ -47,6 +50,7 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
   }, []);
 
   const loadData = () => {
+    console.log('🔵 [DEBUG] FriendsScreen: Starting to load all data');
     dispatch(fetchFriends());
     dispatch(fetchPendingRequests());
     dispatch(fetchSentRequests());
@@ -57,8 +61,7 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
   };
 
   const handleAddFriend = () => {
-    // TODO: Navigate to add friend screen
-    Alert.alert('功能開發中', '搜尋朋友功能即將推出！');
+    navigation.navigate('SearchUsers');
   };
 
   const handleAcceptRequest = (friendshipId: string) => {
@@ -266,11 +269,33 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
     }
   };
 
-  if (error) {
+  // Debug logging
+  console.log('🔍 [DEBUG] FriendsScreen State:', {
+    friends: friends.length,
+    pendingRequests: pendingRequests.length,
+    sentRequests: sentRequests.length,
+    isLoading,
+    error,
+    friendsError,
+    pendingError,
+    sentError
+  });
+
+  // Only show error if all main data loading failed
+  const hasAllErrorsOrNoData = (friendsError && friends.length === 0) && 
+                               (pendingError && pendingRequests.length === 0) && 
+                               (sentError && sentRequests.length === 0);
+  
+  console.log('🔍 [DEBUG] Error check:', { hasAllErrorsOrNoData, generalError: !!error });
+  
+  if (hasAllErrorsOrNoData || error) {
+    console.log('🔴 [DEBUG] Showing error screen');
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>載入失敗：{error}</Text>
+          <Text style={styles.errorText}>
+            載入失敗：{error || friendsError || pendingError || sentError || '未知錯誤'}
+          </Text>
           <Button title="重試" onPress={loadData} />
         </View>
       </SafeAreaView>

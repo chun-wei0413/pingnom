@@ -12,14 +12,15 @@ func CORS(config *config.Config) gin.HandlerFunc {
 		origin := c.Request.Header.Get("Origin")
 		
 		// 檢查是否允許該來源
-		allowedOrigin := "*"
+		finalOrigin := "*"
 		for _, allowedOrigin := range corsConfig.AllowedOrigins {
 			if allowedOrigin == "*" || allowedOrigin == origin {
+				finalOrigin = allowedOrigin
 				break
 			}
 		}
 		
-		c.Header("Access-Control-Allow-Origin", allowedOrigin)
+		c.Header("Access-Control-Allow-Origin", finalOrigin)
 		
 		if corsConfig.AllowCredentials {
 			c.Header("Access-Control-Allow-Credentials", "true")

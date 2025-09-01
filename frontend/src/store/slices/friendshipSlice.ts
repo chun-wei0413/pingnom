@@ -15,6 +15,9 @@ export interface FriendshipState {
   isSending: boolean;
   error: string | null;
   searchError: string | null;
+  friendsError: string | null;
+  pendingError: string | null;
+  sentError: string | null;
 }
 
 const initialState: FriendshipState = {
@@ -31,6 +34,9 @@ const initialState: FriendshipState = {
   isSending: false,
   error: null,
   searchError: null,
+  friendsError: null,
+  pendingError: null,
+  sentError: null,
 };
 
 // Async thunks
@@ -38,9 +44,12 @@ export const fetchFriends = createAsyncThunk(
   'friendship/fetchFriends',
   async ({ limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}, { rejectWithValue }) => {
     try {
+      console.log('🔵 [DEBUG] fetchFriends: Starting request', { limit, offset });
       const response = await friendshipApi.getFriends(limit, offset);
+      console.log('🟢 [DEBUG] fetchFriends: Success', response);
       return response.friends;
     } catch (error: any) {
+      console.error('🔴 [DEBUG] fetchFriends: Error', error);
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch friends');
     }
   }
@@ -50,9 +59,12 @@ export const fetchPendingRequests = createAsyncThunk(
   'friendship/fetchPendingRequests',
   async ({ limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}, { rejectWithValue }) => {
     try {
+      console.log('🔵 [DEBUG] fetchPendingRequests: Starting request', { limit, offset });
       const response = await friendshipApi.getPendingRequests(limit, offset);
+      console.log('🟢 [DEBUG] fetchPendingRequests: Success', response);
       return response.pendingRequests;
     } catch (error: any) {
+      console.error('🔴 [DEBUG] fetchPendingRequests: Error', error);
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch pending requests');
     }
   }
@@ -62,9 +74,12 @@ export const fetchSentRequests = createAsyncThunk(
   'friendship/fetchSentRequests',
   async ({ limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}, { rejectWithValue }) => {
     try {
+      console.log('🔵 [DEBUG] fetchSentRequests: Starting request', { limit, offset });
       const response = await friendshipApi.getSentRequests(limit, offset);
+      console.log('🟢 [DEBUG] fetchSentRequests: Success', response);
       return response.sentRequests;
     } catch (error: any) {
+      console.error('🔴 [DEBUG] fetchSentRequests: Error', error);
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch sent requests');
     }
   }
@@ -149,6 +164,9 @@ const friendshipSlice = createSlice({
     clearError: (state) => {
       state.error = null;
       state.searchError = null;
+      state.friendsError = null;
+      state.pendingError = null;
+      state.sentError = null;
     },
     clearSearchResults: (state) => {
       state.searchResults = [];
@@ -158,44 +176,53 @@ const friendshipSlice = createSlice({
   extraReducers: (builder) => {
     // Fetch friends
     builder.addCase(fetchFriends.pending, (state) => {
+      console.log('🟡 [DEBUG] fetchFriends.pending: Setting loading state');
       state.isLoading = true;
-      state.error = null;
+      state.friendsError = null;
     });
     builder.addCase(fetchFriends.fulfilled, (state, action) => {
+      console.log('🟢 [DEBUG] fetchFriends.fulfilled:', action.payload);
       state.isLoading = false;
       state.friends = action.payload;
+      state.friendsError = null;
     });
     builder.addCase(fetchFriends.rejected, (state, action) => {
+      console.error('🔴 [DEBUG] fetchFriends.rejected:', action.payload);
       state.isLoading = false;
-      state.error = action.payload as string;
+      state.friendsError = action.payload as string;
     });
 
     // Fetch pending requests
     builder.addCase(fetchPendingRequests.pending, (state) => {
+      console.log('🟡 [DEBUG] fetchPendingRequests.pending: Setting loading state');
       state.isLoading = true;
-      state.error = null;
+      state.pendingError = null;
     });
     builder.addCase(fetchPendingRequests.fulfilled, (state, action) => {
+      console.log('🟢 [DEBUG] fetchPendingRequests.fulfilled:', action.payload);
       state.isLoading = false;
       state.pendingRequests = action.payload;
+      state.pendingError = null;
     });
     builder.addCase(fetchPendingRequests.rejected, (state, action) => {
+      console.error('🔴 [DEBUG] fetchPendingRequests.rejected:', action.payload);
       state.isLoading = false;
-      state.error = action.payload as string;
+      state.pendingError = action.payload as string;
     });
 
     // Fetch sent requests
     builder.addCase(fetchSentRequests.pending, (state) => {
       state.isLoading = true;
-      state.error = null;
+      state.sentError = null;
     });
     builder.addCase(fetchSentRequests.fulfilled, (state, action) => {
       state.isLoading = false;
       state.sentRequests = action.payload;
+      state.sentError = null;
     });
     builder.addCase(fetchSentRequests.rejected, (state, action) => {
       state.isLoading = false;
-      state.error = action.payload as string;
+      state.sentError = action.payload as string;
     });
 
     // Search users

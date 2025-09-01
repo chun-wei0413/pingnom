@@ -28,8 +28,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Button
             title="🍽️ 發起新的聚餐"
             onPress={() => {
-              // TODO: Navigate to CreatePing screen
-              console.log('Navigate to CreatePing');
+              navigation.navigate('Pings', { 
+                screen: 'CreatePing' 
+              });
             }}
             size="large"
             style={styles.actionButton}
@@ -38,8 +39,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Button
             title="👥 尋找朋友"
             onPress={() => {
-              // TODO: Navigate to SearchUsers screen
-              console.log('Navigate to SearchUsers');
+              navigation.navigate('Friends');
             }}
             variant="outline"
             size="large"
