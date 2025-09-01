@@ -178,3 +178,64 @@ func (f *FriendshipID) UnmarshalJSON(data []byte) error {
 	*f = friendshipID
 	return nil
 }
+
+// RestaurantID 代表餐廳的唯一識別符
+type RestaurantID struct {
+	value string
+}
+
+// NewRestaurantID 產生新的餐廳 ID
+func NewRestaurantID() RestaurantID {
+	return RestaurantID{
+		value: uuid.New().String(),
+	}
+}
+
+// NewRestaurantIDFromString 從字串建立餐廳 ID
+func NewRestaurantIDFromString(id string) (RestaurantID, error) {
+	if strings.TrimSpace(id) == "" {
+		return RestaurantID{}, errors.New("restaurant ID cannot be empty")
+	}
+	
+	// 驗證是否為有效的 UUID 格式
+	if _, err := uuid.Parse(id); err != nil {
+		return RestaurantID{}, fmt.Errorf("invalid restaurant ID format: %w", err)
+	}
+	
+	return RestaurantID{value: id}, nil
+}
+
+// String 返回字串表示
+func (r RestaurantID) String() string {
+	return r.value
+}
+
+// Equals 檢查兩個餐廳 ID 是否相等
+func (r RestaurantID) Equals(other RestaurantID) bool {
+	return r.value == other.value
+}
+
+// IsEmpty 檢查餐廳 ID 是否為空
+func (r RestaurantID) IsEmpty() bool {
+	return r.value == ""
+}
+
+// JSON marshaling for RestaurantID
+func (r RestaurantID) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.value)
+}
+
+func (r *RestaurantID) UnmarshalJSON(data []byte) error {
+	var value string
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	
+	restaurantID, err := NewRestaurantIDFromString(value)
+	if err != nil {
+		return err
+	}
+	
+	*r = restaurantID
+	return nil
+}

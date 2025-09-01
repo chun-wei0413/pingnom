@@ -10,14 +10,16 @@ type Router struct {
 	userHandler *handlers.UserHandler
 	friendshipHandler *handlers.FriendshipHandler
 	pingHandler *handlers.PingHandler
+	restaurantHandler *handlers.RestaurantHandler
 	authMiddleware *middleware.AuthMiddleware
 }
 
-func NewRouter(userHandler *handlers.UserHandler, friendshipHandler *handlers.FriendshipHandler, pingHandler *handlers.PingHandler, authMiddleware *middleware.AuthMiddleware) *Router {
+func NewRouter(userHandler *handlers.UserHandler, friendshipHandler *handlers.FriendshipHandler, pingHandler *handlers.PingHandler, restaurantHandler *handlers.RestaurantHandler, authMiddleware *middleware.AuthMiddleware) *Router {
 	return &Router{
 		userHandler: userHandler,
 		friendshipHandler: friendshipHandler,
 		pingHandler: pingHandler,
+		restaurantHandler: restaurantHandler,
 		authMiddleware: authMiddleware,
 	}
 }
@@ -96,6 +98,19 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			
 			// Respond to ping
 			pings.PUT("/:id/respond", r.pingHandler.RespondToPing)
+		}
+		
+		// Restaurant routes
+		restaurants := protected.Group("/restaurants")
+		{
+			// Search restaurants
+			restaurants.GET("/", r.restaurantHandler.SearchRestaurants)
+			
+			// Get restaurant recommendations
+			restaurants.POST("/recommendations", r.restaurantHandler.GetRecommendations)
+			
+			// Get restaurant by ID
+			restaurants.GET("/:id", r.restaurantHandler.GetRestaurantByID)
 		}
 	}
 }

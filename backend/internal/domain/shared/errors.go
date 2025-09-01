@@ -34,6 +34,10 @@ var (
 	ErrGroupNotFound         = errors.New("group not found")
 	ErrNotGroupMember        = errors.New("not a group member")
 	ErrNotGroupCreator       = errors.New("not the group creator")
+	
+	// Restaurant Domain Errors
+	ErrRestaurantNotFound = errors.New("restaurant not found")
+	ErrInvalidLocation    = errors.New("invalid location coordinates")
 )
 
 type DomainError struct {

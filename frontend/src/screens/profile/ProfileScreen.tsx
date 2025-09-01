@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,13 +17,16 @@ import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import { HomeTabsScreenProps } from '@/types/navigation';
+import { logout } from '@/store/slices/authSlice';
 
 type ProfileScreenProps = HomeTabsScreenProps<'Profile'>;
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { user } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'privacy'>('profile');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // Profile state
   const [profileData, setProfileData] = useState({
@@ -44,6 +48,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     isDiscoverable: user?.privacySettings?.isDiscoverable || true,
     showLocation: user?.privacySettings?.showLocation || true,
     allowFriendRequest: user?.privacySettings?.allowFriendRequest || true,
+  });
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
 
   const handleSaveProfile = async () => {
@@ -80,6 +91,64 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      Alert.alert('錯誤', '新密碼與確認密碼不一致');
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 8) {
+      Alert.alert('錯誤', '新密碼至少需要8個字元');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await userApi.changePassword({
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword,
+      });
+      
+      Alert.alert(
+        '密碼已更新',
+        '您的密碼已成功更新，請重新登入',
+        [
+          {
+            text: '確定',
+            onPress: () => {
+              setShowPasswordModal(false);
+              setPasswordData({
+                oldPassword: '',
+                newPassword: '',
+                confirmPassword: '',
+              });
+              dispatch(logout());
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('錯誤', '密碼更新失敗，請檢查舊密碼是否正確');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      '確認登出',
+      '您確定要登出嗎？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '登出',
+          style: 'destructive',
+          onPress: () => dispatch(logout()),
+        },
+      ]
+    );
   };
 
   const renderTabBar = () => (
@@ -177,6 +246,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           disabled={loading}
           style={styles.saveButton}
         />
+
+        <View style={styles.actionSection}>
+          <Button
+            title="修改密碼"
+            onPress={() => setShowPasswordModal(true)}
+            variant="outline"
+            style={styles.actionButton}
+          />
+
+          <Button
+            title="登出"
+            onPress={handleLogout}
+            variant="outline"
+            style={[styles.actionButton, styles.logoutButton]}
+          />
+        </View>
       </View>
     </ScrollView>
   );
@@ -349,6 +434,84 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     return <Loading />;
   }
 
+  const renderPasswordModal = () => (
+    <Modal
+      visible={showPasswordModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowPasswordModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>修改密碼</Text>
+            <TouchableOpacity
+              onPress={() => setShowPasswordModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalBody}>
+            <Input
+              label="目前密碼"
+              value={passwordData.oldPassword}
+              onChangeText={(text) =>
+                setPasswordData((prev) => ({ ...prev, oldPassword: text }))
+              }
+              placeholder="輸入目前密碼"
+              secureTextEntry
+              style={styles.passwordInput}
+            />
+
+            <Input
+              label="新密碼"
+              value={passwordData.newPassword}
+              onChangeText={(text) =>
+                setPasswordData((prev) => ({ ...prev, newPassword: text }))
+              }
+              placeholder="輸入新密碼 (至少8個字元)"
+              secureTextEntry
+              style={styles.passwordInput}
+            />
+
+            <Input
+              label="確認新密碼"
+              value={passwordData.confirmPassword}
+              onChangeText={(text) =>
+                setPasswordData((prev) => ({ ...prev, confirmPassword: text }))
+              }
+              placeholder="再次輸入新密碼"
+              secureTextEntry
+              style={styles.passwordInput}
+            />
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <Button
+              title="取消"
+              onPress={() => setShowPasswordModal(false)}
+              variant="outline"
+              style={styles.modalButton}
+            />
+            <Button
+              title="更新密碼"
+              onPress={handleChangePassword}
+              disabled={
+                loading ||
+                !passwordData.oldPassword ||
+                !passwordData.newPassword ||
+                !passwordData.confirmPassword
+              }
+              style={styles.modalButton}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -356,6 +519,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       </View>
       {renderTabBar()}
       {renderContent()}
+      {renderPasswordModal()}
     </SafeAreaView>
   );
 };
@@ -537,6 +701,63 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 24,
+  },
+  actionSection: {
+    marginTop: 32,
+    gap: 12,
+  },
+  actionButton: {
+    borderColor: '#FF6B35',
+  },
+  logoutButton: {
+    borderColor: '#EF4444',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 20,
+    maxHeight: 300,
+  },
+  passwordInput: {
+    marginBottom: 16,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+  },
+  modalButton: {
+    flex: 1,
   },
 });
 

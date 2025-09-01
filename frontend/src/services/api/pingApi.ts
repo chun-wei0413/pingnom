@@ -60,9 +60,9 @@ export interface GetUserPingsResult {
 export class PingApi {
   // Create a new ping
   public async createPing(data: PingRequest): Promise<CreatePingResult> {
-    const response = await apiClient.post<CreatePingResult>('/pings/', data);
-    if (response.data) {
-      return response.data;
+    const response = await apiClient.post<{data: CreatePingResult, message: string}>('/pings/', data);
+    if (response.data?.data) {
+      return response.data.data;
     }
     throw new Error(response.error || 'Failed to create ping');
   }

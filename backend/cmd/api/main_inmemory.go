@@ -17,13 +17,16 @@ import (
 	userqueries "github.com/chun-wei0413/pingnom/internal/application/queries/user"
 	friendshipqueries "github.com/chun-wei0413/pingnom/internal/application/queries/friendship"
 	pingqueries "github.com/chun-wei0413/pingnom/internal/application/queries/ping"
+	restaurantqueries "github.com/chun-wei0413/pingnom/internal/application/queries/restaurant"
 	"github.com/chun-wei0413/pingnom/internal/domain/user"
 	"github.com/chun-wei0413/pingnom/internal/domain/friendship"
 	"github.com/chun-wei0413/pingnom/internal/domain/ping"
+	"github.com/chun-wei0413/pingnom/internal/domain/restaurant"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/auth"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/inmemory"
 	friendshipInmemory "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
 	pingInmemory "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
+	restaurantInmemory "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/handlers"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/middleware"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/routes"
@@ -34,11 +37,13 @@ func main() {
 	userRepo := inmemory.NewInMemoryUserRepository()
 	friendshipRepo := friendshipInmemory.NewInMemoryFriendshipRepository()
 	pingRepo := pingInmemory.NewPingRepository()
+	restaurantRepo := restaurantInmemory.NewRestaurantRepository()
 	
 	// 依賴注入 - 建立 Domain Services
 	userService := user.NewUserService(userRepo)
 	friendshipService := friendship.NewFriendshipService(friendshipRepo)
 	pingService := ping.NewService(pingRepo)
+	restaurantRecommendationService := restaurant.NewRecommendationService(restaurantRepo)
 	
 	// 依賴注入 - 建立 JWT Service
 	jwtService := auth.NewJWTService("your-secret-key-here", 24*time.Hour)
@@ -76,6 +81,10 @@ func main() {
 	// 依賴注入 - 建立 Ping Query Handlers
 	getUserPingsHandler := pingqueries.NewGetUserPingsHandler(pingService)
 	
+	// 依賴注入 - 建立 Restaurant Query Handlers
+	searchRestaurantsHandler := restaurantqueries.NewSearchRestaurantsHandler(restaurantRepo)
+	getRestaurantRecommendationsHandler := restaurantqueries.NewGetRestaurantRecommendationsHandler(restaurantRecommendationService)
+	
 	// 依賴注入 - 建立 Middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	
@@ -105,6 +114,10 @@ func main() {
 		respondToPingHandler,
 		getUserPingsHandler,
 	)
+	restaurantHandler := handlers.NewRestaurantHandler(
+		searchRestaurantsHandler,
+		getRestaurantRecommendationsHandler,
+	)
 	
 	// 設定 Gin 為開發模式
 	gin.SetMode(gin.DebugMode)
@@ -118,7 +131,7 @@ func main() {
 	engine.Use(corsMiddleware())
 	
 	// 使用新的 Router 來設定路由
-	router := routes.NewRouter(userHandler, friendshipHandler, pingHandler, authMiddleware)
+	router := routes.NewRouter(userHandler, friendshipHandler, pingHandler, restaurantHandler, authMiddleware)
 	router.SetupRoutes(engine)
 	
 	// 認證路由 (Public)
@@ -140,6 +153,9 @@ func main() {
 	
 	// 創建測試帳號
 	createTestUsers(registerUserHandler)
+	
+	// 創建測試餐廳資料
+	createTestRestaurants(restaurantRepo)
 
 	// 在 goroutine 中啟動服務器
 	go func() {
@@ -198,6 +214,183 @@ func createTestUsers(registerHandler *usercommands.RegisterUserHandler) {
 	} else {
 		log.Printf("✅ Created test user: Alice Wang (alice@pingnom.app)")
 	}
+}
+
+// createTestRestaurants 創建測試餐廳資料
+func createTestRestaurants(restaurantRepo restaurant.Repository) {
+	ctx := context.Background()
+	
+	// 台北市中心區域的測試餐廳
+	testRestaurants := []*restaurant.Restaurant{}
+	
+	// 1. 鼎泰豐 (信義店) - 台北市信義區
+	dingTaiFeng, _ := restaurant.NewRestaurant(
+		"鼎泰豐 (信義店)",
+		"著名的小籠包餐廳，提供精緻的台式點心與料理",
+		restaurant.Location{
+			Latitude:  25.0330,
+			Longitude: 121.5654,
+			Address:   "台北市信義區松仁路58號",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeTaiwanese, restaurant.CuisineTypeChinese},
+		restaurant.PriceLevelExpensive,
+		"+886-2-8101-7799",
+	)
+	dingTaiFeng.Rating = 4.3
+	dingTaiFeng.TotalReviews = 2856
+	dingTaiFeng.AcceptsReservations = true
+	dingTaiFeng.AverageWaitTime = 30
+	dingTaiFeng.SupportedRestrictions = []restaurant.DietaryRestriction{restaurant.DietaryRestrictionVegetarian}
+	testRestaurants = append(testRestaurants, dingTaiFeng)
+	
+	// 2. 欣葉日本料理 - 台北市中山區
+	xinYe, _ := restaurant.NewRestaurant(
+		"欣葉日本料理",
+		"老字號日本料理餐廳，提供新鮮壽司與日式料理",
+		restaurant.Location{
+			Latitude:  25.0478,
+			Longitude: 121.5319,
+			Address:   "台北市中山區南京東路二段206號",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeJapanese},
+		restaurant.PriceLevelExpensive,
+		"+886-2-2507-3255",
+	)
+	xinYe.Rating = 4.1
+	xinYe.TotalReviews = 1923
+	xinYe.AcceptsReservations = true
+	xinYe.AverageWaitTime = 25
+	testRestaurants = append(testRestaurants, xinYe)
+	
+	// 3. 大三元酒樓 - 台北市大同區
+	daSanYuan, _ := restaurant.NewRestaurant(
+		"大三元酒樓",
+		"傳統粤菜茶餐廳，提供港式點心與粤菜料理",
+		restaurant.Location{
+			Latitude:  25.0453,
+			Longitude: 121.5097,
+			Address:   "台北市大同區民生西路136號",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeChinese},
+		restaurant.PriceLevelMidRange,
+		"+886-2-2558-9295",
+	)
+	daSanYuan.Rating = 3.9
+	daSanYuan.TotalReviews = 1456
+	daSanYuan.AcceptsReservations = true
+	daSanYuan.AverageWaitTime = 20
+	testRestaurants = append(testRestaurants, daSanYuan)
+	
+	// 4. 春川炸雞 - 台北市中正區
+	chunChuan, _ := restaurant.NewRestaurant(
+		"春川炸雞 (台北車站店)",
+		"韓式炸雞專門店，提供多種口味的韓式炸雞",
+		restaurant.Location{
+			Latitude:  25.0478,
+			Longitude: 121.5170,
+			Address:   "台北市中正區館前路8號B1",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeKorean},
+		restaurant.PriceLevelMidRange,
+		"+886-2-2389-1391",
+	)
+	chunChuan.Rating = 4.2
+	chunChuan.TotalReviews = 2134
+	chunChuan.AcceptsReservations = false
+	chunChuan.AverageWaitTime = 15
+	testRestaurants = append(testRestaurants, chunChuan)
+	
+	// 5. MOMO Paradise - 台北市信義區
+	momoPara, _ := restaurant.NewRestaurant(
+		"MOMO Paradise (信義店)",
+		"日式涮涮鍋吃到飽餐廳，提供優質肉品與海鮮",
+		restaurant.Location{
+			Latitude:  25.0360,
+			Longitude: 121.5645,
+			Address:   "台北市信義區松高路19號4樓",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeJapanese, restaurant.CuisineTypeHotpot},
+		restaurant.PriceLevelExpensive,
+		"+886-2-2722-0062",
+	)
+	momoPara.Rating = 4.0
+	momoPara.TotalReviews = 1687
+	momoPara.AcceptsReservations = true
+	momoPara.AverageWaitTime = 35
+	testRestaurants = append(testRestaurants, momoPara)
+	
+	// 6. 寬巷子鍋物 - 台北市大安區
+	kuanXiangZi, _ := restaurant.NewRestaurant(
+		"寬巷子鍋物",
+		"精緻火鍋餐廳，提供高品質食材與獨特湯頭",
+		restaurant.Location{
+			Latitude:  25.0417,
+			Longitude: 121.5436,
+			Address:   "台北市大安區敦化南路一段161巷18號",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeHotpot, restaurant.CuisineTypeTaiwanese},
+		restaurant.PriceLevelVeryExpensive,
+		"+886-2-2741-5353",
+	)
+	kuanXiangZi.Rating = 4.4
+	kuanXiangZi.TotalReviews = 934
+	kuanXiangZi.AcceptsReservations = true
+	kuanXiangZi.AverageWaitTime = 40
+	testRestaurants = append(testRestaurants, kuanXiangZi)
+	
+	// 7. 素食者天堂 - 台北市松山區
+	vegParadise, _ := restaurant.NewRestaurant(
+		"素食者天堂",
+		"創意素食餐廳，提供健康美味的素食料理",
+		restaurant.Location{
+			Latitude:  25.0497,
+			Longitude: 121.5746,
+			Address:   "台北市松山區南京東路四段133號",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeVegetarian, restaurant.CuisineTypeTaiwanese},
+		restaurant.PriceLevelMidRange,
+		"+886-2-2718-8866",
+	)
+	vegParadise.Rating = 4.3
+	vegParadise.TotalReviews = 678
+	vegParadise.AcceptsReservations = true
+	vegParadise.AverageWaitTime = 10
+	vegParadise.SupportedRestrictions = []restaurant.DietaryRestriction{
+		restaurant.DietaryRestrictionVegetarian, 
+		restaurant.DietaryRestrictionVegan,
+	}
+	testRestaurants = append(testRestaurants, vegParadise)
+	
+	// 8. 阿宗麵線 - 台北市萬華區
+	aZongNoodles, _ := restaurant.NewRestaurant(
+		"阿宗麵線 (西門店)",
+		"台北知名小吃，傳統大腸麵線專賣店",
+		restaurant.Location{
+			Latitude:  25.0421,
+			Longitude: 121.5064,
+			Address:   "台北市萬華區峨嵋街8-1號",
+		},
+		[]restaurant.CuisineType{restaurant.CuisineTypeTaiwanese},
+		restaurant.PriceLevelBudget,
+		"+886-2-2388-8808",
+	)
+	aZongNoodles.Rating = 3.8
+	aZongNoodles.TotalReviews = 5623
+	aZongNoodles.AcceptsReservations = false
+	aZongNoodles.AverageWaitTime = 5
+	testRestaurants = append(testRestaurants, aZongNoodles)
+	
+	// 將測試餐廳資料存入 repository
+	successCount := 0
+	for _, rest := range testRestaurants {
+		if err := restaurantRepo.Create(ctx, rest); err != nil {
+			log.Printf("⚠️  Failed to create test restaurant %s: %v", rest.Name, err)
+		} else {
+			successCount++
+		}
+	}
+	
+	log.Printf("✅ Created %d test restaurants in Taipei area", successCount)
 }
 
 // corsMiddleware 提供簡單的 CORS 支援

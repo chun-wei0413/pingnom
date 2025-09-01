@@ -8,6 +8,7 @@ import HomeScreen from '@/screens/home/HomeScreen';
 import ProfileScreen from '@/screens/profile/ProfileScreen';
 import PingsScreen from '@/screens/pings/PingsScreen';
 import CreatePingScreen from '@/screens/pings/CreatePingScreen';
+import FriendsScreen from '@/screens/friends/FriendsScreen';
 
 // Placeholder screens for development
 const PlaceholderScreen: React.FC<{ title: string }> = ({ title }) => {
@@ -30,7 +31,7 @@ const PingsNavigator = () => {
   );
 };
 
-const FriendsScreen = () => <PlaceholderScreen title="朋友" />;
+// FriendsScreen is now imported from screens/friends/FriendsScreen.tsx
 
 const Tab = createBottomTabNavigator<HomeTabsParamList>();
 

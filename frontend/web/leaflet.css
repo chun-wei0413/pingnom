@@ -1,0 +1,33 @@
+/* Leaflet CSS - 免費地圖樣式 */
+@import url('https://unpkg.com/leaflet@1.7.1/dist/leaflet.css');
+
+/* 自訂地圖樣式 */
+.custom-restaurant-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-user-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-center-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 確保地圖正確顯示 */
+.leaflet-container {
+  font-family: inherit;
+}
+
+/* 修復 popup 樣式 */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px;
+  line-height: 1.4;
+}

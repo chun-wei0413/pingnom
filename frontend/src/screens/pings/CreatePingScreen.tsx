@@ -17,6 +17,10 @@ import Loading from '@/components/common/Loading';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { createPing, fetchUserPings } from '@/store/slices/pingSlice';
 import { PingRequest } from '@/services/api/pingApi';
+import { restaurantApi, RecommendationResult, Location } from '@/services/api/restaurantApi';
+import { useLocation } from '@/hooks/useLocation';
+import PlatformMapView from '@/components/maps/PlatformMapView';
+import RestaurantDetailModal from '@/components/modals/RestaurantDetailModal';
 
 interface CreatePingScreenProps {
   navigation: any;
@@ -37,6 +41,24 @@ const CreatePingScreen: React.FC<CreatePingScreenProps> = ({ navigation }) => {
   // const [showDatePicker, setShowDatePicker] = useState(false);
   // const [showTimePicker, setShowTimePicker] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Restaurant recommendations state
+  const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<RecommendationResult | null>(null);
+  const [participantLocations, setParticipantLocations] = useState<Location[]>([]);
+  const [centerLocation, setCenterLocation] = useState<Location | null>(null);
+  const [showMap, setShowMap] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [detailModalRestaurant, setDetailModalRestaurant] = useState<RecommendationResult | null>(null);
+  
+  // Location hook
+  const { 
+    location: userLocation, 
+    loading: locationLoading, 
+    error: locationError,
+    getCurrentLocation 
+  } = useLocation();
 
   const pingTypeOptions = [
     { value: 'breakfast', label: '🌅 早餐', emoji: '🌅' },
@@ -56,6 +78,97 @@ const CreatePingScreen: React.FC<CreatePingScreenProps> = ({ navigation }) => {
     // For now, just add 1 hour to current time
     const newDateTime = new Date(Date.now() + 60 * 60 * 1000);
     setFormData(prev => ({ ...prev, scheduledAt: newDateTime }));
+  };
+
+  // Get restaurant recommendations based on current location
+  const getRestaurantRecommendations = async (useCurrentLocation: boolean = false) => {
+    setLoadingRecommendations(true);
+    try {
+      let locations: Location[] = [];
+      
+      if (useCurrentLocation && userLocation) {
+        // 使用用戶當前位置
+        locations = [userLocation];
+      } else {
+        // 使用預設示例位置 (台北101 and 台北車站)
+        locations = [
+          {
+            latitude: 25.0330,
+            longitude: 121.5654,
+            address: '台北101'
+          },
+          {
+            latitude: 25.0478,
+            longitude: 121.5318,
+            address: '台北車站'
+          }
+        ];
+      }
+      
+      setParticipantLocations(locations);
+      
+      // 計算中心點
+      const centerLat = locations.reduce((sum, loc) => sum + loc.latitude, 0) / locations.length;
+      const centerLng = locations.reduce((sum, loc) => sum + loc.longitude, 0) / locations.length;
+      const center: Location = {
+        latitude: centerLat,
+        longitude: centerLng,
+        address: '會面中心點'
+      };
+      setCenterLocation(center);
+      
+      const response = await restaurantApi.getRecommendations({
+        participantLocations: locations,
+        maxDistance: 5.0,
+        maxResults: 8
+      });
+      
+      // 後端直接回傳 {recommendations: [...]}，而不是包裝在 data 中
+      const recommendations = (response as any).recommendations || response.data?.recommendations || [];
+      setRecommendations(recommendations);
+      setShowMap(true);
+    } catch (error) {
+      console.error('獲取餐廳推薦失敗:', error);
+      Alert.alert('錯誤', '無法獲取餐廳推薦，請稍後再試');
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+  
+  // 獲取用戶位置並推薦餐廳
+  const getRecommendationsWithLocation = async () => {
+    if (locationLoading) return;
+    
+    if (!userLocation) {
+      await getCurrentLocation();
+    }
+    
+    // 等一下讓 location 狀態更新
+    setTimeout(() => {
+      getRestaurantRecommendations(true);
+    }, 100);
+  };
+
+  const selectRestaurant = (recommendation: RecommendationResult) => {
+    setSelectedRestaurant(recommendation);
+    // Auto-fill title with restaurant name if title is empty
+    if (!formData.title.trim()) {
+      setFormData(prev => ({ 
+        ...prev, 
+        title: `${recommendation.restaurant.name} 聚餐` 
+      }));
+    }
+  };
+  
+  // 顯示餐廳詳情
+  const showRestaurantDetail = (recommendation: RecommendationResult) => {
+    setDetailModalRestaurant(recommendation);
+    setDetailModalVisible(true);
+  };
+  
+  // 從詳情模態選擇餐廳
+  const selectRestaurantFromModal = (recommendation: RecommendationResult) => {
+    selectRestaurant(recommendation);
   };
 
   const validateForm = () => {
@@ -84,7 +197,7 @@ const CreatePingScreen: React.FC<CreatePingScreenProps> = ({ navigation }) => {
 
     // For demo purposes, we'll use Alice's user ID as a hardcoded invitee
     // In a real app, this would come from friend selection or user search
-    const demoAliceUserId = 'de163489-88b8-40c6-8bc8-0f0522ffc0ec'; // This would be dynamic
+    const demoAliceUserId = '0515b690-772b-45ca-846d-6d3a6c244bf2'; // Alice's current ID in InMemory DB
 
     const pingRequest: PingRequest = {
       title: formData.title.trim(),
@@ -202,6 +315,131 @@ const CreatePingScreen: React.FC<CreatePingScreenProps> = ({ navigation }) => {
           )}
         </View>
 
+        {/* Restaurant Recommendations */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>餐廳推薦</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity 
+                style={[styles.recommendButton, styles.secondaryButton]}
+                onPress={() => getRestaurantRecommendations(false)}
+                disabled={loadingRecommendations}
+              >
+                <Ionicons name="restaurant-outline" size={14} color="#666" />
+                <Text style={styles.secondaryButtonText}>
+                  {loadingRecommendations ? '推薦中...' : '示例推薦'}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.recommendButton}
+                onPress={getRecommendationsWithLocation}
+                disabled={loadingRecommendations || locationLoading}
+              >
+                <Ionicons name="location-outline" size={14} color="white" />
+                <Text style={styles.recommendButtonText}>
+                  {locationLoading ? '定位中...' : loadingRecommendations ? '推薦中...' : '我的位置'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          {locationError && (
+            <View style={styles.errorContainer}>
+              <Ionicons name="warning-outline" size={16} color="#EF4444" />
+              <Text style={styles.errorText}>{locationError.message}</Text>
+            </View>
+          )}
+          
+          {recommendations.length > 0 && (
+            <View style={styles.recommendationsContainer}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.recommendationsScroll}
+              >
+                {recommendations.map((recommendation, index) => (
+                  <TouchableOpacity
+                    key={recommendation.restaurant.id}
+                    style={[
+                      styles.restaurantCard,
+                      selectedRestaurant?.restaurant.id === recommendation.restaurant.id && 
+                      styles.restaurantCardSelected
+                    ]}
+                    onPress={() => selectRestaurant(recommendation)}
+                  >
+                    <View style={styles.restaurantHeader}>
+                      <Text style={styles.restaurantName} numberOfLines={1}>
+                        {recommendation.restaurant.name}
+                      </Text>
+                      <View style={styles.ratingContainer}>
+                        <Ionicons name="star" size={12} color="#FFD700" />
+                        <Text style={styles.ratingText}>
+                          {recommendation.restaurant.rating.toFixed(1)}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <Text style={styles.restaurantCuisine} numberOfLines={1}>
+                      {recommendation.restaurant.cuisineTypes.join(' • ')}
+                    </Text>
+                    
+                    <Text style={styles.restaurantDistance}>
+                      平均距離 {recommendation.averageDistance.toFixed(1)}km
+                    </Text>
+                    
+                    <View style={styles.scoreContainer}>
+                      <Text style={styles.scoreText}>
+                        推薦分數: {Math.round(recommendation.score)}
+                      </Text>
+                    </View>
+                    
+                    <TouchableOpacity 
+                      style={styles.detailButton}
+                      onPress={() => showRestaurantDetail(recommendation)}
+                    >
+                      <Ionicons name="information-circle-outline" size={12} color="#666" />
+                      <Text style={styles.detailButtonText}>詳情</Text>
+                    </TouchableOpacity>
+                    
+                    {selectedRestaurant?.restaurant.id === recommendation.restaurant.id && (
+                      <View style={styles.selectedIndicator}>
+                        <Ionicons name="checkmark-circle" size={16} color="#FF6B35" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+          
+          {/* Map View */}
+          {showMap && recommendations.length > 0 && (
+            <PlatformMapView
+              recommendations={recommendations}
+              userLocation={userLocation}
+              centerLocation={centerLocation}
+              selectedRestaurant={selectedRestaurant}
+              onRestaurantPress={selectRestaurant}
+              onUserLocationPress={() => getCurrentLocation()}
+            />
+          )}
+          
+          {selectedRestaurant && (
+            <View style={styles.selectedRestaurantInfo}>
+              <Text style={styles.selectedRestaurantTitle}>
+                已選擇: {selectedRestaurant.restaurant.name}
+              </Text>
+              <Text style={styles.selectedRestaurantAddress}>
+                📍 {selectedRestaurant.restaurant.location.address}
+              </Text>
+              <Text style={styles.selectedRestaurantDescription}>
+                {selectedRestaurant.restaurant.description}
+              </Text>
+            </View>
+          )}
+        </View>
+
         {/* Invitees */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>邀請對象</Text>
@@ -231,6 +469,14 @@ const CreatePingScreen: React.FC<CreatePingScreenProps> = ({ navigation }) => {
       {/* Note: Date/Time picker simplified for demo */}
 
       {isCreating && <Loading overlay text="創建中..." />}
+      
+      {/* Restaurant Detail Modal */}
+      <RestaurantDetailModal
+        visible={detailModalVisible}
+        recommendation={detailModalRestaurant}
+        onClose={() => setDetailModalVisible(false)}
+        onSelect={selectRestaurantFromModal}
+      />
     </SafeAreaView>
   );
 };
@@ -343,6 +589,161 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#EF4444',
     marginTop: 4,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  recommendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#FF6B35',
+    borderRadius: 8,
+    gap: 4,
+  },
+  secondaryButton: {
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  recommendButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  secondaryButtonText: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+    marginTop: 8,
+    gap: 6,
+  },
+  recommendationsContainer: {
+    marginTop: 8,
+  },
+  recommendationsScroll: {
+    paddingHorizontal: 4,
+    gap: 12,
+  },
+  restaurantCard: {
+    width: 200,
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E5E5E5',
+    marginHorizontal: 4,
+    position: 'relative',
+  },
+  restaurantCardSelected: {
+    backgroundColor: '#FFF5F3',
+    borderColor: '#FF6B35',
+  },
+  restaurantHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  restaurantName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+    marginRight: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  restaurantCuisine: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  restaurantDistance: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+  },
+  scoreContainer: {
+    backgroundColor: '#E8F4FD',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  scoreText: {
+    fontSize: 11,
+    color: '#0369A1',
+    fontWeight: '500',
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  detailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    backgroundColor: '#E8F4FD',
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    gap: 2,
+  },
+  detailButtonText: {
+    fontSize: 10,
+    color: '#0369A1',
+    fontWeight: '500',
+  },
+  selectedRestaurantInfo: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0F2FE',
+  },
+  selectedRestaurantTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0369A1',
+    marginBottom: 4,
+  },
+  selectedRestaurantAddress: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  selectedRestaurantDescription: {
+    fontSize: 12,
+    color: '#666',
+    lineHeight: 16,
   },
 });
 
