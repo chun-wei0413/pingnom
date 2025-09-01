@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { HomeTabsParamList } from '@/types/navigation';
 import HomeScreen from '@/screens/home/HomeScreen';
 import ProfileScreen from '@/screens/profile/ProfileScreen';
+import PingsScreen from '@/screens/pings/PingsScreen';
+import CreatePingScreen from '@/screens/pings/CreatePingScreen';
 
 // Placeholder screens for development
 const PlaceholderScreen: React.FC<{ title: string }> = ({ title }) => {
@@ -16,7 +19,17 @@ const PlaceholderScreen: React.FC<{ title: string }> = ({ title }) => {
   );
 };
 
-const PingsScreen = () => <PlaceholderScreen title="Pings" />;
+// Create stack navigator for Pings tab
+const PingsStack = createStackNavigator();
+const PingsNavigator = () => {
+  return (
+    <PingsStack.Navigator screenOptions={{ headerShown: false }}>
+      <PingsStack.Screen name="PingsList" component={PingsScreen} />
+      <PingsStack.Screen name="CreatePing" component={CreatePingScreen} />
+    </PingsStack.Navigator>
+  );
+};
+
 const FriendsScreen = () => <PlaceholderScreen title="朋友" />;
 
 const Tab = createBottomTabNavigator<HomeTabsParamList>();
@@ -66,7 +79,7 @@ const MainNavigator: React.FC = () => {
       />
       <Tab.Screen 
         name="Pings" 
-        component={PingsScreen}
+        component={PingsNavigator}
         options={{ tabBarLabel: 'Pings' }}
       />
       <Tab.Screen 
