@@ -36,6 +36,7 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 // Request configuration
 export interface RequestConfig {
   method: HttpMethod;
+  url?: string;
   headers?: Record<string, string>;
   params?: Record<string, any>;
   data?: any;

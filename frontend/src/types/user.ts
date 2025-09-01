@@ -74,9 +74,10 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  user: User;
   accessToken: string;
-  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: UserProfile;
 }
 
 export interface UpdateProfileRequest {

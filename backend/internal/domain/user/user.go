@@ -47,6 +47,11 @@ func NewUser(email, phoneNumber, password, displayName string) (*User, error) {
 		return nil, shared.ErrWeakPassword
 	}
 	
+	// 驗證顯示名稱 (僅允許英文)
+	if !isValidDisplayName(displayName) {
+		return nil, shared.ErrInvalidDisplayName
+	}
+	
 	// 建立密碼雜湊
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -172,4 +177,27 @@ func isStrongPassword(password string) bool {
 	hasSpecial := strings.ContainsAny(password, "!@#$%^&*()_+-=[]{}|;:,.<>?")
 	
 	return hasUpper && hasLower && hasNumber && hasSpecial
+}
+
+func isValidDisplayName(displayName string) bool {
+	if len(displayName) < 1 || len(displayName) > 50 {
+		return false
+	}
+	
+	// 只允許英文字母、數字、空格和常見標點符號
+	for _, char := range displayName {
+		if !((char >= 'a' && char <= 'z') || 
+			 (char >= 'A' && char <= 'Z') || 
+			 (char >= '0' && char <= '9') || 
+			 char == ' ' || char == '.' || char == '-') {
+			return false
+		}
+	}
+	
+	// 不能只有空格
+	if strings.TrimSpace(displayName) == "" {
+		return false
+	}
+	
+	return true
 }

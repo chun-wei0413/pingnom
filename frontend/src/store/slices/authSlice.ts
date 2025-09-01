@@ -35,10 +35,18 @@ export const register = createAsyncThunk(
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (data: LoginRequest, { rejectWithValue }) => {
+  async (data: LoginRequest, { rejectWithValue, dispatch }) => {
     try {
       const response = await userApi.login(data);
-      return response;
+      // 登入成功後立即獲取完整的用戶資料
+      try {
+        const userProfile = await userApi.getProfile();
+        return { ...response, fullUser: userProfile };
+      } catch (profileError) {
+        // 即使獲取完整資料失敗，仍然返回登入結果
+        console.warn('Failed to fetch full user profile after login:', profileError);
+        return response;
+      }
     } catch (error: any) {
       return rejectWithValue(error.error || 'Login failed');
     }
@@ -110,9 +118,33 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
+        // 如果有完整的用戶資料，使用它；否則使用基本資料
+        if (action.payload.fullUser) {
+          state.user = action.payload.fullUser;
+        } else {
+          // 建立基本的 User 物件
+          state.user = {
+            id: '', // 暫時空值
+            email: '', // 暫時空值
+            profile: action.payload.user,
+            preferences: {
+              cuisineTypes: [],
+              restrictions: [],
+              priceRange: { min: 0, max: 1000 }
+            },
+            privacySettings: {
+              isDiscoverable: true,
+              showLocation: true,
+              allowFriendRequest: true
+            },
+            isActive: true,
+            isVerified: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          } as User;
+        }
         state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
+        state.refreshToken = null; // 目前後端沒有實作 refresh token
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {

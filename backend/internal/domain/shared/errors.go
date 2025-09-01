@@ -11,11 +11,14 @@ var (
 	ErrResourceConflict  = errors.New("resource conflict")
 	
 	// User Domain Errors
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrInvalidEmail      = errors.New("invalid email format")
-	ErrInvalidPhone      = errors.New("invalid phone number")
-	ErrWeakPassword      = errors.New("password too weak")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrUserAlreadyExists  = errors.New("user already exists")
+	ErrInvalidEmail       = errors.New("invalid email format")
+	ErrInvalidPhone       = errors.New("invalid phone number")
+	ErrWeakPassword       = errors.New("password too weak")
+	ErrInvalidCredentials = errors.New("invalid email or password")
+	ErrUserInactive       = errors.New("user account is inactive")
+	ErrInvalidDisplayName = errors.New("display name must contain only English letters, numbers, and spaces")
 	
 	// Ping Domain Errors
 	ErrPingNotFound      = errors.New("ping not found")

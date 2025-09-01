@@ -22,7 +22,6 @@ export class UserApi {
   }
 
   public async login(data: LoginRequest): Promise<LoginResponse> {
-    // Note: Login endpoint not yet implemented in backend, this is for future use
     const response = await apiClient.post<LoginResponse>('/auth/login', data);
     if (response.data) {
       // Store token after successful login
@@ -57,6 +56,29 @@ export class UserApi {
 
   public async changePassword(data: ChangePasswordRequest): Promise<void> {
     const response = await apiClient.put('/users/password', data);
+    if (response.error) {
+      throw new Error(response.error);
+    }
+  }
+
+  public async updatePreferences(data: {
+    cuisineTypes: string[];
+    restrictions: string[];
+    minPrice: number;
+    maxPrice: number;
+  }): Promise<void> {
+    const response = await apiClient.put('/users/preferences', data);
+    if (response.error) {
+      throw new Error(response.error);
+    }
+  }
+
+  public async updatePrivacy(data: {
+    isDiscoverable: boolean;
+    showLocation: boolean;
+    allowFriendRequest: boolean;
+  }): Promise<void> {
+    const response = await apiClient.put('/users/privacy', data);
     if (response.error) {
       throw new Error(response.error);
     }

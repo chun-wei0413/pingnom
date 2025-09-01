@@ -5,17 +5,16 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/chun-wei0413/pingnom/internal/infrastructure/config"
+	"github.com/chun-wei0413/pingnom/internal/infrastructure/auth"
 )
 
 type AuthMiddleware struct {
-	jwtSecret string
+	jwtService *auth.JWTService
 }
 
-func NewAuthMiddleware(config *config.Config) *AuthMiddleware {
+func NewAuthMiddleware(jwtService *auth.JWTService) *AuthMiddleware {
 	return &AuthMiddleware{
-		jwtSecret: config.JWT.Secret,
+		jwtService: jwtService,
 	}
 }
 
@@ -42,31 +41,29 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 		
 		tokenString := parts[1]
 		
-		// 解析和驗證 JWT token
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
+		// 使用 JWT 服務驗證 token
+		claims, err := m.jwtService.ValidateToken(tokenString)
+		if err != nil {
+			var errorMsg string
+			switch err {
+			case auth.ErrExpiredToken:
+				errorMsg = "Token has expired"
+			case auth.ErrInvalidToken:
+				errorMsg = "Invalid token"
+			default:
+				errorMsg = "Token validation failed"
 			}
-			return []byte(m.jwtSecret), nil
-		})
-		
-		if err != nil || !token.Valid {
+			
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid or expired token",
+				"error": errorMsg,
 			})
 			c.Abort()
 			return
 		}
 		
-		// 提取 claims
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			if userID, exists := claims["sub"]; exists {
-				c.Set("userID", userID)
-			}
-			if email, exists := claims["email"]; exists {
-				c.Set("email", email)
-			}
-		}
+		// 設置用戶資訊到 context
+		c.Set("userID", claims.UserID)
+		c.Set("email", claims.Email)
 		
 		c.Next()
 	}

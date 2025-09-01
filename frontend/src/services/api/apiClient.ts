@@ -101,7 +101,7 @@ class ApiClient {
   public async request<T>(config: RequestConfig): Promise<ApiResponse<T>> {
     const axiosConfig: AxiosRequestConfig = {
       method: config.method,
-      url: config.headers?.url || '',
+      url: config.url || '',
       headers: config.headers,
       params: config.params,
       data: config.data,
@@ -117,19 +117,19 @@ class ApiClient {
 
   // Convenience methods
   public async get<T>(url: string, params?: any): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'GET', headers: { url }, params });
+    return this.request<T>({ method: 'GET', url, params });
   }
 
   public async post<T>(url: string, data?: any): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'POST', headers: { url }, data });
+    return this.request<T>({ method: 'POST', url, data });
   }
 
   public async put<T>(url: string, data?: any): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'PUT', headers: { url }, data });
+    return this.request<T>({ method: 'PUT', url, data });
   }
 
   public async delete<T>(url: string): Promise<ApiResponse<T>> {
-    return this.request<T>({ method: 'DELETE', headers: { url } });
+    return this.request<T>({ method: 'DELETE', url });
   }
 
   // Health check

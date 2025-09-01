@@ -8,12 +8,16 @@ import (
 
 type Router struct {
 	userHandler *handlers.UserHandler
+	friendshipHandler *handlers.FriendshipHandler
+	pingHandler *handlers.PingHandler
 	authMiddleware *middleware.AuthMiddleware
 }
 
-func NewRouter(userHandler *handlers.UserHandler, authMiddleware *middleware.AuthMiddleware) *Router {
+func NewRouter(userHandler *handlers.UserHandler, friendshipHandler *handlers.FriendshipHandler, pingHandler *handlers.PingHandler, authMiddleware *middleware.AuthMiddleware) *Router {
 	return &Router{
 		userHandler: userHandler,
+		friendshipHandler: friendshipHandler,
+		pingHandler: pingHandler,
 		authMiddleware: authMiddleware,
 	}
 }
@@ -48,5 +52,50 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 		protected.GET("/users/profile", r.userHandler.GetProfile)
 		protected.PUT("/users/profile", r.userHandler.UpdateProfile)
 		protected.PUT("/users/password", r.userHandler.ChangePassword)
+		
+		// User preferences and privacy
+		protected.PUT("/users/preferences", r.userHandler.UpdatePreferences)
+		protected.PUT("/users/privacy", r.userHandler.UpdatePrivacy)
+		
+		// Friendship routes
+		friends := protected.Group("/friends")
+		{
+			// Send friend request
+			friends.POST("/request", r.friendshipHandler.SendFriendRequest)
+			
+			// Accept friend request
+			friends.PUT("/request/:id/accept", r.friendshipHandler.AcceptFriendRequest)
+			
+			// Decline friend request
+			friends.PUT("/request/:id/decline", r.friendshipHandler.DeclineFriendRequest)
+			
+			// Block user
+			friends.POST("/block", r.friendshipHandler.BlockUser)
+			
+			// Remove friend
+			friends.DELETE("/:friendId", r.friendshipHandler.RemoveFriend)
+			
+			// Get friends list
+			friends.GET("/", r.friendshipHandler.GetFriends)
+			
+			// Get pending friend requests (received)
+			friends.GET("/requests/pending", r.friendshipHandler.GetPendingRequests)
+			
+			// Get sent friend requests
+			friends.GET("/requests/sent", r.friendshipHandler.GetSentRequests)
+		}
+		
+		// Ping routes
+		pings := protected.Group("/pings")
+		{
+			// Create new ping
+			pings.POST("/", r.pingHandler.CreatePing)
+			
+			// Get user's pings
+			pings.GET("/", r.pingHandler.GetUserPings)
+			
+			// Respond to ping
+			pings.PUT("/:id/respond", r.pingHandler.RespondToPing)
+		}
 	}
 }

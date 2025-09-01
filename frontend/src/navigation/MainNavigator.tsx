@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { HomeTabsParamList } from '@/types/navigation';
 import HomeScreen from '@/screens/home/HomeScreen';
+import ProfileScreen from '@/screens/profile/ProfileScreen';
 
 // Placeholder screens for development
 const PlaceholderScreen: React.FC<{ title: string }> = ({ title }) => {
@@ -17,7 +18,6 @@ const PlaceholderScreen: React.FC<{ title: string }> = ({ title }) => {
 
 const PingsScreen = () => <PlaceholderScreen title="Pings" />;
 const FriendsScreen = () => <PlaceholderScreen title="朋友" />;
-const ProfileScreen = () => <PlaceholderScreen title="個人檔案" />;
 
 const Tab = createBottomTabNavigator<HomeTabsParamList>();
 

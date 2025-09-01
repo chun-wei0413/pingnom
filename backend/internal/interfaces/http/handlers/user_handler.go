@@ -11,26 +11,32 @@ import (
 )
 
 type UserHandler struct {
-	registerUserHandler    *usercommands.RegisterUserHandler
-	updateProfileHandler   *usercommands.UpdateProfileHandler
-	changePasswordHandler  *usercommands.ChangePasswordHandler
-	getUserProfileHandler  *userqueries.GetUserProfileHandler
-	searchUsersHandler     *userqueries.SearchUsersHandler
+	registerUserHandler      *usercommands.RegisterUserHandler
+	updateProfileHandler     *usercommands.UpdateProfileHandler
+	updatePreferencesHandler *usercommands.UpdatePreferencesHandler
+	updatePrivacyHandler     *usercommands.UpdatePrivacyHandler
+	changePasswordHandler    *usercommands.ChangePasswordHandler
+	getUserProfileHandler    *userqueries.GetUserProfileHandler
+	searchUsersHandler       *userqueries.SearchUsersHandler
 }
 
 func NewUserHandler(
 	registerUserHandler *usercommands.RegisterUserHandler,
 	updateProfileHandler *usercommands.UpdateProfileHandler,
+	updatePreferencesHandler *usercommands.UpdatePreferencesHandler,
+	updatePrivacyHandler *usercommands.UpdatePrivacyHandler,
 	changePasswordHandler *usercommands.ChangePasswordHandler,
 	getUserProfileHandler *userqueries.GetUserProfileHandler,
 	searchUsersHandler *userqueries.SearchUsersHandler,
 ) *UserHandler {
 	return &UserHandler{
-		registerUserHandler:    registerUserHandler,
-		updateProfileHandler:   updateProfileHandler,
-		changePasswordHandler:  changePasswordHandler,
-		getUserProfileHandler:  getUserProfileHandler,
-		searchUsersHandler:     searchUsersHandler,
+		registerUserHandler:      registerUserHandler,
+		updateProfileHandler:     updateProfileHandler,
+		updatePreferencesHandler: updatePreferencesHandler,
+		updatePrivacyHandler:     updatePrivacyHandler,
+		changePasswordHandler:    changePasswordHandler,
+		getUserProfileHandler:    getUserProfileHandler,
+		searchUsersHandler:       searchUsersHandler,
 	}
 }
 
@@ -179,6 +185,84 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	})
 }
 
+// PUT /api/users/preferences
+func (h *UserHandler) UpdatePreferences(c *gin.Context) {
+	userID, err := h.getUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+	
+	var cmd usercommands.UpdatePreferencesCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request body",
+			"details": err.Error(),
+		})
+		return
+	}
+	
+	cmd.UserID = userID
+	
+	if err := h.updatePreferencesHandler.Handle(c.Request.Context(), cmd); err != nil {
+		statusCode := http.StatusInternalServerError
+		if err == shared.ErrUserNotFound {
+			statusCode = http.StatusNotFound
+		} else if err == shared.ErrInvalidInput {
+			statusCode = http.StatusBadRequest
+		}
+		
+		c.JSON(statusCode, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Preferences updated successfully",
+	})
+}
+
+// PUT /api/users/privacy
+func (h *UserHandler) UpdatePrivacy(c *gin.Context) {
+	userID, err := h.getUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+	
+	var cmd usercommands.UpdatePrivacyCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request body",
+			"details": err.Error(),
+		})
+		return
+	}
+	
+	cmd.UserID = userID
+	
+	if err := h.updatePrivacyHandler.Handle(c.Request.Context(), cmd); err != nil {
+		statusCode := http.StatusInternalServerError
+		if err == shared.ErrUserNotFound {
+			statusCode = http.StatusNotFound
+		}
+		
+		c.JSON(statusCode, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Privacy settings updated successfully",
+	})
+}
+
 // GET /api/users/search
 func (h *UserHandler) SearchUsers(c *gin.Context) {
 	query := c.Query("q")
@@ -216,12 +300,17 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 
 // Helper method to extract user ID from JWT token
 func (h *UserHandler) getUserIDFromContext(c *gin.Context) (shared.UserID, error) {
-	// 這會在實作 JWT middleware 後正確實作
-	// 目前暫時回傳空值
-	userIDStr, exists := c.Get("userID")
-	if !exists {
-		return shared.UserID{}, shared.ErrUnauthorized
+	// 開發模式：從 Header 中取得 X-User-ID 進行測試
+	userIDStr := c.GetHeader("X-User-ID")
+	if userIDStr != "" {
+		return shared.NewUserIDFromString(userIDStr)
 	}
 	
-	return shared.NewUserIDFromString(userIDStr.(string))
+	// JWT 模式（未來實作）
+	userIDFromJWT, exists := c.Get("userID")
+	if exists {
+		return shared.NewUserIDFromString(userIDFromJWT.(string))
+	}
+	
+	return shared.UserID{}, shared.ErrUnauthorized
 }

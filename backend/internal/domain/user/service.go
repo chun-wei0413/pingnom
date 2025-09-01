@@ -55,6 +55,11 @@ func (s *UserService) RegisterUser(ctx context.Context, email, phoneNumber, pass
 	return user, nil
 }
 
+// GetUserByEmail retrieves user by email
+func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	return s.userRepo.FindByEmail(ctx, email)
+}
+
 // AuthenticateUser verifies user credentials and returns the user if valid
 func (s *UserService) AuthenticateUser(ctx context.Context, email, password string) (*User, error) {
 	user, err := s.userRepo.FindByEmail(ctx, email)

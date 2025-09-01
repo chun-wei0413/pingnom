@@ -76,19 +76,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleDemoLogin = () => {
+  const handleForgotPassword = () => {
     Alert.alert(
-      '開發模式',
-      '這是開發版本，登入功能尚未完全實作。請先使用註冊功能建立帳號。',
-      [
-        { text: '了解', style: 'default' },
-        { 
-          text: '前往註冊', 
-          style: 'default',
-          onPress: () => navigation.navigate('Register')
-        },
-      ]
+      '忘記密碼',
+      '忘記密碼功能將在未來版本中實作。',
+      [{ text: '了解', style: 'default' }]
     );
+  };
+
+  const handleDemoLogin = (email: string, password: string, displayName: string) => {
+    setFormData({ email, password });
+    setErrors({});
+    
+    setTimeout(() => {
+      dispatch(login({ email, password }));
+    }, 100);
   };
 
   return (
@@ -139,7 +141,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             <Button
               title="登入"
-              onPress={handleDemoLogin} // 暫時使用 demo 功能
+              onPress={handleLogin}
               loading={isLoading}
               disabled={isLoading}
               style={styles.loginButton}
@@ -147,7 +149,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             <Button
               title="忘記密碼？"
-              onPress={() => Alert.alert('開發中', '忘記密碼功能開發中')}
+              onPress={handleForgotPassword}
               variant="text"
               size="small"
               style={styles.forgotButton}
@@ -165,6 +167,27 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               variant="outline"
               style={styles.registerButton}
             />
+
+            {/* Demo Login Buttons - Development Only */}
+            {__DEV__ && (
+              <>
+                <View style={styles.demoSection}>
+                  <Text style={styles.demoTitle}>快速測試登入</Text>
+                  <Button
+                    title="👨‍💼 Frank Li (創建者)"
+                    onPress={() => handleDemoLogin('testuser@pingnom.app', 'TestPassword2024!', 'Frank Li')}
+                    variant="secondary"
+                    style={[styles.demoButton, styles.frankButton]}
+                  />
+                  <Button
+                    title="👩‍💼 Alice Wang (邀請對象)"
+                    onPress={() => handleDemoLogin('alice@pingnom.app', 'AlicePassword2024!', 'Alice Wang')}
+                    variant="secondary"
+                    style={[styles.demoButton, styles.aliceButton]}
+                  />
+                </View>
+              </>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -232,6 +255,30 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     marginBottom: 24,
+  },
+  demoSection: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#0EA5E9',
+  },
+  demoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0EA5E9',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  demoButton: {
+    marginBottom: 8,
+  },
+  frankButton: {
+    backgroundColor: '#10B981',
+  },
+  aliceButton: {
+    backgroundColor: '#8B5CF6',
   },
   errorContainer: {
     backgroundColor: '#FEF2F2',
