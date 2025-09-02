@@ -64,11 +64,19 @@ const SearchUsersScreen: React.FC<SearchUsersScreenProps> = ({ navigation }) => 
   };
 
   const handleSendFriendRequest = async (targetUserId: string, displayName: string) => {
+    console.log('🔄 handleSendFriendRequest called:', { targetUserId, displayName });
+    console.log('🔄 Current user:', user);
+    
     try {
-      await dispatch(sendFriendRequest({
+      const displayNameToUse = user?.profile?.displayName || user?.displayName || 'Unknown';
+      console.log('🔄 Using display name:', displayNameToUse);
+      
+      const result = await dispatch(sendFriendRequest({
         addresseeId: targetUserId,
-        message: `你好！我是 ${user?.profile?.displayName}，希望能成為朋友一起聚餐！`
+        message: `你好！我是 ${displayNameToUse}，希望能成為朋友一起聚餐！`
       })).unwrap();
+      
+      console.log('✅ sendFriendRequest successful:', result);
       
       Alert.alert(
         '成功',
@@ -84,6 +92,7 @@ const SearchUsersScreen: React.FC<SearchUsersScreenProps> = ({ navigation }) => 
         ]
       );
     } catch (error) {
+      console.error('❌ sendFriendRequest failed:', error);
       Alert.alert('錯誤', '發送好友邀請失敗，請再試一次');
     }
   };
