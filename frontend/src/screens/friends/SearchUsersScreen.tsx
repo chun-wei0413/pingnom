@@ -14,7 +14,8 @@ import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { sendFriendRequest } from '@/store/slices/friendshipSlice';
-import { userApi, UserProfile } from '@/services/api/userApi';
+import { userApi } from '@/services/api/userApi';
+import { UserSearchResult } from '@/types/user';
 
 interface SearchUsersScreenProps {
   navigation: any;
@@ -26,30 +27,39 @@ const SearchUsersScreen: React.FC<SearchUsersScreenProps> = ({ navigation }) => 
   const { user } = useAppSelector((state) => state.auth);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
   // Search for users
   const handleSearch = async () => {
+    console.log('🔍 handleSearch called with query:', searchQuery);
+    
     if (!searchQuery.trim()) {
+      console.log('🔍 Empty search query, returning');
       return;
     }
 
+    console.log('🔍 Starting search for:', searchQuery.trim());
     setIsSearching(true);
     try {
       const response = await userApi.searchUsers({ query: searchQuery.trim() });
+      console.log('🔍 Search response received:', response);
+      
       // Filter out current user from results
       const filteredResults = response.users.filter(
-        (searchUser: UserProfile) => searchUser.id !== user?.profile?.id
+        (searchUser: UserSearchResult) => searchUser.id !== user?.id
       );
+      console.log('🔍 Filtered results:', filteredResults);
+      
       setSearchResults(filteredResults);
       setHasSearched(true);
     } catch (error) {
-      console.error('搜尋用戶失敗:', error);
+      console.error('🔴 搜尋用戶失敗:', error);
       Alert.alert('錯誤', '搜尋用戶失敗，請稍後再試');
     } finally {
       setIsSearching(false);
+      console.log('🔍 Search completed, isSearching set to false');
     }
   };
 
@@ -78,7 +88,7 @@ const SearchUsersScreen: React.FC<SearchUsersScreenProps> = ({ navigation }) => 
     }
   };
 
-  const UserResultCard: React.FC<{ userProfile: UserProfile }> = ({ userProfile }) => (
+  const UserResultCard: React.FC<{ userProfile: UserSearchResult }> = ({ userProfile }) => (
     <View style={styles.userCard}>
       <View style={styles.userInfo}>
         <View style={styles.userAvatar}>
@@ -96,6 +106,7 @@ const SearchUsersScreen: React.FC<SearchUsersScreenProps> = ({ navigation }) => 
         size="small"
         style={styles.addFriendButton}
         disabled={isSending}
+        testID={`add-friend-${userProfile.id}`}
       />
     </View>
   );
@@ -134,6 +145,7 @@ const SearchUsersScreen: React.FC<SearchUsersScreenProps> = ({ navigation }) => 
               loading={isSearching}
               disabled={isSearching || !searchQuery.trim()}
               style={styles.searchButton}
+              testID="search-users-button"
             />
           </View>
         </View>

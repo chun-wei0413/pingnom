@@ -85,7 +85,12 @@ test.describe('朋友系統 E2E 測試', () => {
     
     // 5. 搜尋 Alice
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
+    
+    // 先截圖調試選擇器
+    await page.screenshot({ path: 'debug-before-search-click.png', fullPage: true });
+    
+    // 等待搜尋按鈕可點擊並點擊
+    await page.getByTestId('search-users-button').click();
     
     // 6. 等待搜尋完成並驗證結果
     await page.waitForTimeout(3000); // 等待搜尋完成
@@ -120,7 +125,7 @@ test.describe('朋友系統 E2E 測試', () => {
     
     // 3. 搜尋 Alice
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
+    await page.getByTestId('search-users-button').click();
     await expect(page.locator('text=Alice Wang')).toBeVisible({ timeout: 10000 });
     
     // 4. 發送好友邀請
@@ -153,7 +158,7 @@ test.describe('朋友系統 E2E 測試', () => {
     // 點擊朋友頁面右上角的加好友按鈕（橙色圓形按鈕）
     await page.locator('[data-testid="add-friend-button"]').click();
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
+    await page.getByTestId('search-users-button').click();
     await expect(page.locator('text=Alice Wang')).toBeVisible({ timeout: 10000 });
     await page.click('text=加好友');
     await expect(page.locator('text=已向 Alice Wang 發送好友邀請！')).toBeVisible({ timeout: 10000 });
@@ -200,7 +205,7 @@ test.describe('朋友系統 E2E 測試', () => {
     // 點擊朋友頁面右上角的加好友按鈕（橙色圓形按鈕）
     await page.locator('[data-testid="add-friend-button"]').click();
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
+    await page.getByTestId('search-users-button').click();
     await expect(page.locator('text=Alice Wang')).toBeVisible({ timeout: 10000 });
     await page.click('text=加好友');
     await expect(page.locator('text=已向 Alice Wang 發送好友邀請！')).toBeVisible({ timeout: 10000 });
