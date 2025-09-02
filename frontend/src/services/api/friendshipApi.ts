@@ -84,7 +84,8 @@ export const friendshipApi = {
     const response = await apiClient.get('/friends/', {
       limit, offset
     });
-    return response.data;
+    // Backend returns data directly, not wrapped in {data: ...}
+    return response.data || response;
   },
 
   // Get pending friend requests (received)
@@ -92,7 +93,8 @@ export const friendshipApi = {
     const response = await apiClient.get('/friends/requests/pending', {
       limit, offset
     });
-    return response.data;
+    // Backend returns data directly, not wrapped in {data: ...}
+    return response.data || response;
   },
 
   // Get sent friend requests
@@ -100,7 +102,8 @@ export const friendshipApi = {
     const response = await apiClient.get('/friends/requests/sent', {
       limit, offset
     });
-    return response.data;
+    // Backend returns data directly, not wrapped in {data: ...}
+    return response.data || response;
   },
 
   // Search users for adding friends
