@@ -76,18 +76,32 @@ test.describe('朋友系統 E2E 測試', () => {
       ).first()
     ).toBeVisible({ timeout: 10000 });
     
-    // 3. 點擊搜尋朋友按鈕
-    await page.locator('text=搜尋朋友').first().click();
+    // 3. 點擊右上角的加號按鈕（導航到搜尋頁面）
+    await page.locator('[data-testid="add-friend-button"]').click();
     
     // 4. 驗證搜尋頁面開啟
-    await expect(page.locator('text=搜尋朋友').first()).toBeVisible();
     await expect(page.locator('text=尋找新朋友')).toBeVisible();
+    await expect(page.locator('input[placeholder*="輸入姓名或 Email"]')).toBeVisible();
     
     // 5. 搜尋 Alice
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.click('text=搜尋');
+    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
     
-    // 6. 驗證搜尋結果
+    // 6. 等待搜尋完成並驗證結果
+    await page.waitForTimeout(3000); // 等待搜尋完成
+    
+    // 先截圖以便調試
+    await page.screenshot({ path: 'debug-search-results.png', fullPage: true });
+    
+    // 驗證搜尋結果（嘗試不同的選擇器）
+    const aliceVisible = await page.locator('text=Alice Wang').isVisible({ timeout: 5000 });
+    if (!aliceVisible) {
+      // 嘗試尋找 "沒有找到用戶" 或其他結果文字
+      const noResults = await page.locator('text=沒有找到用戶').isVisible();
+      const emptyState = await page.locator('text=嘗試使用不同的關鍵字搜尋').isVisible();
+      console.log('Alice not found. No results message:', noResults, 'Empty state:', emptyState);
+    }
+    
     await expect(page.locator('text=Alice Wang')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=alice@pingnom.app')).toBeVisible();
     
@@ -102,11 +116,11 @@ test.describe('朋友系統 E2E 測試', () => {
     // 2. 進入朋友頁面並搜尋 Alice
     await page.getByRole('link', { name: '朋友' }).click();
     // 點擊朋友頁面右上角的加好友按鈕（橙色圓形按鈕）
-    await page.locator('text=搜尋朋友').click();
+    await page.locator('[data-testid="add-friend-button"]').click();
     
     // 3. 搜尋 Alice
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.click('text=搜尋');
+    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
     await expect(page.locator('text=Alice Wang')).toBeVisible({ timeout: 10000 });
     
     // 4. 發送好友邀請
@@ -137,9 +151,9 @@ test.describe('朋友系統 E2E 測試', () => {
     await loginWithAccount(page, TEST_ACCOUNTS.frank);
     await page.getByRole('link', { name: '朋友' }).click();
     // 點擊朋友頁面右上角的加好友按鈕（橙色圓形按鈕）
-    await page.locator('text=搜尋朋友').click();
+    await page.locator('[data-testid="add-friend-button"]').click();
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.click('text=搜尋');
+    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
     await expect(page.locator('text=Alice Wang')).toBeVisible({ timeout: 10000 });
     await page.click('text=加好友');
     await expect(page.locator('text=已向 Alice Wang 發送好友邀請！')).toBeVisible({ timeout: 10000 });
@@ -155,7 +169,7 @@ test.describe('朋友系統 E2E 測試', () => {
     await expect(alicePage.locator('text=朋友')).toBeVisible();
     
     // 4. 點擊邀請頁籤
-    await alicePage.click('text=邀請 (1)', { timeout: 10000 });
+    await alicePage.locator('text=邀請 (1)').first().click();
     
     // 5. 驗證收到 Frank 的邀請
     await expect(alicePage.locator('text=Frank Li')).toBeVisible();
@@ -184,9 +198,9 @@ test.describe('朋友系統 E2E 測試', () => {
     await loginWithAccount(page, TEST_ACCOUNTS.frank);
     await page.getByRole('link', { name: '朋友' }).click();
     // 點擊朋友頁面右上角的加好友按鈕（橙色圓形按鈕）
-    await page.locator('text=搜尋朋友').click();
+    await page.locator('[data-testid="add-friend-button"]').click();
     await page.fill('input[placeholder*="輸入姓名或 Email"]', 'Alice');
-    await page.click('text=搜尋');
+    await page.locator('text=搜尋').nth(2).click(); // 第3個搜尋文字元素是按鈕
     await expect(page.locator('text=Alice Wang')).toBeVisible({ timeout: 10000 });
     await page.click('text=加好友');
     await expect(page.locator('text=已向 Alice Wang 發送好友邀請！')).toBeVisible({ timeout: 10000 });
@@ -197,7 +211,7 @@ test.describe('朋友系統 E2E 測試', () => {
     await alicePage.goto('/');
     await loginWithAccount(alicePage, TEST_ACCOUNTS.alice);
     await alicePage.getByRole('link', { name: '朋友' }).click();
-    await alicePage.click('text=邀請 (1)', { timeout: 10000 });
+    await alicePage.locator('text=邀請 (1)').first().click();
     await expect(alicePage.locator('text=Frank Li')).toBeVisible();
     
     // 3. 拒絕好友邀請

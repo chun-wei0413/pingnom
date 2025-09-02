@@ -93,8 +93,10 @@ export class UserApi {
     };
 
     const response = await apiClient.get<{ users: UserSearchResult[]; total: number }>('/users/search', params);
-    if (response.data) {
-      return response.data;
+    // Backend returns data wrapped in {data: {...}}, but also handle direct format
+    const data = response.data || response;
+    if (data) {
+      return data;
     }
     throw new Error(response.error || 'Failed to search users');
   }

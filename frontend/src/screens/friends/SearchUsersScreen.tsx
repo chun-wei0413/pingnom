@@ -38,9 +38,9 @@ const SearchUsersScreen: React.FC<SearchUsersScreenProps> = ({ navigation }) => 
 
     setIsSearching(true);
     try {
-      const response = await userApi.searchUsers(searchQuery.trim());
+      const response = await userApi.searchUsers({ query: searchQuery.trim() });
       // Filter out current user from results
-      const filteredResults = response.filter(
+      const filteredResults = response.users.filter(
         (searchUser: UserProfile) => searchUser.id !== user?.profile?.id
       );
       setSearchResults(filteredResults);

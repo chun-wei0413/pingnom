@@ -307,7 +307,11 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>朋友</Text>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddFriend}>
+        <TouchableOpacity 
+          style={styles.addButton} 
+          onPress={handleAddFriend}
+          testID="add-friend-button"
+        >
           <Ionicons name="person-add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
