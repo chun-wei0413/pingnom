@@ -124,8 +124,90 @@ src/
 
 ## 🧪 測試
 
+### 🤖 UI 測試 - Robot Framework (主要)
+
+使用 BDD (行為驅動開發) 風格的 Robot Framework 進行 UI 測試：
+
 ```bash
-# 執行所有測試
+# 進入測試目錄
+cd tests/robot
+
+# 執行所有 BDD 測試 (推薦)
+./run_tests.sh        # Linux/macOS
+run_tests.bat          # Windows
+
+# 執行特定標籤測試
+robot --outputdir results --include smoke features/        # 冒煙測試
+robot --outputdir results --include critical features/     # 關鍵測試
+robot --outputdir results --include integration features/  # 整合測試
+
+# 執行特定測試檔案  
+robot --outputdir results features/friend_system.robot
+robot --outputdir results features/friend_request_flow.robot
+```
+
+**測試報告位置**: `tests/robot/results/`
+- `report.html` - 主要測試報告
+- `log.html` - 詳細測試日誌
+- 截圖檔案 - 測試過程截圖
+
+### 📱 Mobile 測試 - Appium (原生功能)
+
+用於 React Native Mobile App 的真機和模擬器測試：
+
+```bash
+# 進入 Appium 測試目錄
+cd tests/appium
+
+# 執行 iOS 測試
+robot --outputdir results --variable PLATFORM:iOS features/
+
+# 執行 Android 測試
+robot --outputdir results --variable PLATFORM:Android features/
+
+# 執行特定標籤測試
+robot --outputdir results --include mobile features/
+```
+
+### 🧪 測試架構
+
+```
+tests/
+├── robot/                    # Robot Framework BDD 測試 (Web)
+│   ├── features/            # BDD 場景檔案
+│   │   ├── friend_system.robot
+│   │   └── friend_request_flow.robot
+│   ├── keywords/            # 測試關鍵字
+│   ├── variables/           # 測試配置
+│   ├── results/             # 測試報告 (執行時生成)
+│   └── README.md           # 詳細使用說明
+└── appium/                  # Appium Mobile 測試
+    ├── features/            # Mobile BDD 場景
+    ├── keywords/            # Mobile 測試關鍵字
+    ├── capabilities/        # 設備配置檔案
+    └── results/             # Mobile 測試報告
+```
+
+### 🎯 BDD 場景範例
+
+```robot
+場景: 用戶能夠成功登入並訪問朋友頁面
+    [Documentation]    
+    ...    身為一個 Pingnom 用戶
+    ...    當我使用有效的帳號登入
+    ...    我應該能夠成功進入應用程式並訪問朋友功能
+    [Tags]    smoke    login    friends
+    
+    Given 我是一個註冊用戶 Frank Li
+    When 我使用我的帳號登入
+    Then 我應該看到歡迎訊息
+    And 我應該能夠訪問朋友頁面
+```
+
+### 📊 單元測試
+
+```bash
+# 執行所有單元測試
 npm test
 
 # 執行特定測試
