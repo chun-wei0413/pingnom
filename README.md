@@ -79,13 +79,32 @@ To make spontaneous dining with friends as easy as sending a text, creating a wo
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React Native with Expo Go (iOS only)
-- **Backend**: Golang
-- **Database**: PostgreSQL(Use an in-memory database before the feature is completed.)
-- **Real-time**: Socket.io
+- **Frontend**: React 18 + TypeScript + Vite (Web Application)
+- **Backend**: Golang with Clean Architecture & DDD
+- **Database**: PostgreSQL (Currently using in-memory database for development)
+- **Real-time**: Socket.io (Planned)
 - **Maps**: Google Maps API
+- **Styling**: Tailwind CSS
+- **State Management**: Redux Toolkit
 
-## 📱 Get Started
+## 🚀 Development Status
+
+### ✅ Completed Features
+- **Backend API**: Complete REST API with 11+ endpoints
+- **Authentication System**: JWT-based user authentication
+- **Friends Management**: Search users, send/accept friend requests
+- **Ping System**: Create and respond to meal invitations
+- **Group Dining API**: Complete backend for group dining planning (11 endpoints)
+
+### 🔄 Current Architecture Refactoring
+- **Frontend Migration**: Migrating from React Native to React Web for better development experience
+- **Focus**: Clean, responsive web application with modern UX/UI
+
+### 📋 Next Steps
+1. Build React Web frontend with Vite + TypeScript
+2. Implement Group Dining UI with voting system
+3. Add real-time features with Socket.io
+4. Deploy to production environment
 
 Focus on core functionality design and user experience to create the best social dining experience!
 
