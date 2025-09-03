@@ -7,8 +7,10 @@ import { AuthStackScreenProps } from '@/types/navigation';
 type WelcomeScreenProps = AuthStackScreenProps<'Welcome'>;
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
+  console.log('🔵 WelcomeScreen - Rendering');
+  
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { minHeight: '100vh' }]}>
       <View style={styles.content}>
         {/* Logo/Icon placeholder */}
         <View style={styles.logoContainer}>
@@ -57,7 +59,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

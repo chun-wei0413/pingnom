@@ -43,6 +43,11 @@ const FriendsNavigator = () => {
   );
 };
 
+// Create stack navigator for Group Dining tab - Coming Soon
+const GroupDiningNavigator = () => {
+  return <PlaceholderScreen title="群組聚餐" />;
+};
+
 const Tab = createBottomTabNavigator<HomeTabsParamList>();
 
 const MainNavigator: React.FC = () => {
@@ -56,6 +61,8 @@ const MainNavigator: React.FC = () => {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Pings') {
             iconName = focused ? 'restaurant' : 'restaurant-outline';
+          } else if (route.name === 'GroupDining') {
+            iconName = focused ? 'people-circle' : 'people-circle-outline';
           } else if (route.name === 'Friends') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Profile') {
@@ -92,6 +99,11 @@ const MainNavigator: React.FC = () => {
         name="Pings" 
         component={PingsNavigator}
         options={{ tabBarLabel: 'Pings' }}
+      />
+      <Tab.Screen 
+        name="GroupDining" 
+        component={GroupDiningNavigator}
+        options={{ tabBarLabel: '群組聚餐' }}
       />
       <Tab.Screen 
         name="Friends" 

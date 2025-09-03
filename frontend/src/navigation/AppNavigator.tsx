@@ -9,6 +9,20 @@ import Loading from '@/components/common/Loading';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+// Suppress React Native Web warnings
+const originalWarn = console.warn;
+console.warn = (message) => {
+  if (
+    typeof message === 'string' &&
+    (message.includes('shadow*') || 
+     message.includes('pointerEvents') ||
+     message.includes('deprecated'))
+  ) {
+    return;
+  }
+  originalWarn(message);
+};
+
 const AppNavigator: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
@@ -16,10 +30,16 @@ const AppNavigator: React.FC = () => {
   useEffect(() => {
     // TODO: Check for stored authentication token and validate it
     // For now, we'll just show the auth flow
+    console.log('🔵 AppNavigator - Initial load', { isAuthenticated, user, isLoading });
   }, []);
+
+  useEffect(() => {
+    console.log('🔵 AppNavigator - Auth state changed', { isAuthenticated, user, isLoading });
+  }, [isAuthenticated, user, isLoading]);
 
   // Show loading screen during initial app load
   if (isLoading) {
+    console.log('🔵 AppNavigator - Showing loading screen');
     return <Loading text="載入中..." />;
   }
 
