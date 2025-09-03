@@ -19,9 +19,9 @@ exclude:
 
 # 變數設定
 variable:
-  - BROWSER:chromium
+  - BROWSER:chrome
   - HEADLESS:False
-  - APP_URL:http://localhost:19006
+  - APP_URL:http://localhost:8093
 
 # 測試套件設定
 suite:

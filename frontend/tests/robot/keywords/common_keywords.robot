@@ -5,7 +5,7 @@ Resource   ../variables/test_config.robot
 *** Keywords ***
 Setup Browser And Navigate To App
     [Documentation]    開啟瀏覽器並導航到應用程式
-    Open Browser    ${APP_URL}    ${BROWSER}    options=add_argument("--start-maximized")
+    Open Browser    ${APP_URL}    ${BROWSER}    options=add_argument("--start-maximized");add_argument("--disable-web-security");add_argument("--allow-running-insecure-content");add_argument("--ignore-certificate-errors");add_argument("--ignore-ssl-errors");add_argument("--allow-insecure-localhost");add_argument("--disable-features=VizDisplayCompositor")
     Set Browser Implicit Wait    ${DEFAULT_TIMEOUT}
     Wait For Page To Load
     

@@ -45,7 +45,7 @@ Suite Teardown   Close All Browsers
 *** Keywords ***
 我開啟 Pingnom 應用程式
     [Documentation]    開啟瀏覽器並導航到應用程式
-    Open Browser    ${APP_URL}    ${BROWSER}
+    Open Browser    ${APP_URL}    ${BROWSER}    options=add_argument("--disable-web-security");add_argument("--allow-running-insecure-content");add_argument("--ignore-certificate-errors");add_argument("--ignore-ssl-errors");add_argument("--allow-insecure-localhost");add_argument("--disable-features=VizDisplayCompositor")
     Maximize Browser Window
     Set Browser Implicit Wait    15s
 

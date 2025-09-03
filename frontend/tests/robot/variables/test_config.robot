@@ -1,6 +1,6 @@
 *** Variables ***
 # 應用程式 URL
-${APP_URL}                  http://localhost:19006
+${APP_URL}                  http://localhost:8093/index.html
 
 # 測試帳號
 ${FRANK_EMAIL}              testuser@pingnom.app  

@@ -22,7 +22,9 @@
       },
       "package": "com.pingnom.app"
     },
-    "web": {},
+    "web": {
+      "bundler": "webpack"
+    },
     "plugins": [
       "expo-location"
     ]

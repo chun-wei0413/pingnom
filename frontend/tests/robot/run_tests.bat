@@ -35,9 +35,9 @@ robot ^
     --outputdir results ^
     --loglevel INFO ^
     --include smoke ^
-    --variable BROWSER:chromium ^
+    --variable BROWSER:chrome ^
     --variable HEADLESS:False ^
-    --variable APP_URL:http://localhost:19006 ^
+    --variable APP_URL:http://localhost:8093 ^
     features/
 
 if errorlevel 1 (
