@@ -30,6 +30,11 @@ import (
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/handlers"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/middleware"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/routes"
+	
+	// Group Dining imports
+	"github.com/chun-wei0413/pingnom/internal/application/groupdining/services"
+	groupdiningrepos "github.com/chun-wei0413/pingnom/internal/infrastructure/groupdining/repositories"
+	"github.com/chun-wei0413/pingnom/internal/interfaces/http/controllers"
 )
 
 func main() {
@@ -38,6 +43,10 @@ func main() {
 	friendshipRepo := friendshipInmemory.NewInMemoryFriendshipRepository()
 	pingRepo := pingInmemory.NewPingRepository()
 	restaurantRepo := restaurantInmemory.NewRestaurantRepository()
+	
+	// Group Dining repositories
+	groupDiningPlanRepo := groupdiningrepos.NewGroupDiningPlanRepositoryInMemory()
+	voteRepo := groupdiningrepos.NewVoteRepositoryInMemory()
 	
 	// 依賴注入 - 建立 Domain Services
 	userService := user.NewUserService(userRepo)
@@ -84,6 +93,10 @@ func main() {
 	// 依賴注入 - 建立 Restaurant Query Handlers
 	searchRestaurantsHandler := restaurantqueries.NewSearchRestaurantsHandler(restaurantRepo)
 	getRestaurantRecommendationsHandler := restaurantqueries.NewGetRestaurantRecommendationsHandler(restaurantRecommendationService)
+	
+	// 依賴注入 - 建立 Group Dining Service & Controller
+	groupDiningService := services.NewGroupDiningService(groupDiningPlanRepo, voteRepo)
+	groupDiningController := controllers.NewGroupDiningController(groupDiningService)
 	
 	// 依賴注入 - 建立 Middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
@@ -140,6 +153,30 @@ func main() {
 		auth.POST("/login", authHandler.Login)
 		auth.POST("/logout", authHandler.Logout)
 		auth.POST("/refresh", authHandler.RefreshToken)
+	}
+	
+	// Group Dining 路由 (Require Auth)
+	groupDining := engine.Group("/api/v1/group-dining")
+	groupDining.Use(authMiddleware.RequireAuth())
+	{
+		// Create & Get Group Dining Plans
+		groupDining.POST("/plans", groupDiningController.CreateGroupDiningPlan)
+		groupDining.GET("/plans/:id", groupDiningController.GetGroupDiningPlan)
+		groupDining.GET("/plans", groupDiningController.GetGroupDiningPlansByCreator)
+		groupDining.GET("/participants/plans", groupDiningController.GetGroupDiningPlansByParticipant)
+		
+		// Manage Time Slots & Restaurant Options
+		groupDining.POST("/plans/:id/time-slots", groupDiningController.AddTimeSlot)
+		groupDining.POST("/plans/:id/restaurants", groupDiningController.AddRestaurantOption)
+		
+		// Join Plan & Voting
+		groupDining.POST("/plans/:id/join", groupDiningController.JoinGroupDiningPlan)
+		groupDining.POST("/plans/:id/start-voting", groupDiningController.StartVoting)
+		groupDining.POST("/plans/:id/vote", groupDiningController.SubmitVote)
+		groupDining.GET("/plans/:id/results", groupDiningController.GetVotingResults)
+		
+		// Finalize Plan
+		groupDining.POST("/plans/:id/finalize", groupDiningController.FinalizeGroupDiningPlan)
 	}
 	
 	// 建立 HTTP 服務器
