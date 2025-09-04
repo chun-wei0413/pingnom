@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store';
+import type { AppDispatch, RootState } from '../store';
 import { login } from '../store/authSlice';
 import { Button, Input } from '../components/ui';
-import { LoginRequest } from '../types';
+import type { LoginRequest } from '../types/api';
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<LoginRequest>({

@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
-import { LoginPage, DashboardPage } from './pages';
+import { LoginPage, DashboardPage, FriendsPage } from './pages';
 import PrivateRoute from './components/layout/PrivateRoute';
 import { useAuth } from './hooks/useAuth';
 
@@ -20,6 +20,14 @@ const AppRoutes: React.FC = () => {
         element={
           <PrivateRoute>
             <DashboardPage />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/friends" 
+        element={
+          <PrivateRoute>
+            <FriendsPage />
           </PrivateRoute>
         } 
       />
