@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"fmt"
+	
 	"github.com/gin-gonic/gin"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/config"
 )
@@ -64,7 +66,7 @@ func CORS(config *config.Config) gin.HandlerFunc {
 		
 		// 設定預檢請求快取時間
 		if corsConfig.MaxAge > 0 {
-			c.Header("Access-Control-Max-Age", string(rune(corsConfig.MaxAge)))
+			c.Header("Access-Control-Max-Age", fmt.Sprintf("%d", corsConfig.MaxAge))
 		}
 		
 		// 處理預檢請求

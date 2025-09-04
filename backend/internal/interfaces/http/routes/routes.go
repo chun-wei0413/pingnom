@@ -8,15 +8,17 @@ import (
 
 type Router struct {
 	userHandler *handlers.UserHandler
+	authHandler *handlers.AuthHandler
 	friendshipHandler *handlers.FriendshipHandler
 	pingHandler *handlers.PingHandler
 	restaurantHandler *handlers.RestaurantHandler
 	authMiddleware *middleware.AuthMiddleware
 }
 
-func NewRouter(userHandler *handlers.UserHandler, friendshipHandler *handlers.FriendshipHandler, pingHandler *handlers.PingHandler, restaurantHandler *handlers.RestaurantHandler, authMiddleware *middleware.AuthMiddleware) *Router {
+func NewRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHandler, friendshipHandler *handlers.FriendshipHandler, pingHandler *handlers.PingHandler, restaurantHandler *handlers.RestaurantHandler, authMiddleware *middleware.AuthMiddleware) *Router {
 	return &Router{
 		userHandler: userHandler,
+		authHandler: authHandler,
 		friendshipHandler: friendshipHandler,
 		pingHandler: pingHandler,
 		restaurantHandler: restaurantHandler,
@@ -39,6 +41,9 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 	// Public routes (no authentication required)
 	public := v1.Group("/")
 	{
+		// Authentication
+		public.POST("/auth/login", r.authHandler.Login)
+		
 		// User registration
 		public.POST("/users/register", r.userHandler.Register)
 		

@@ -11,10 +11,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	usercommands "github.com/chun-wei0413/pingnom/internal/application/commands/user"
+	authcommands "github.com/chun-wei0413/pingnom/internal/application/commands/auth"
 	userqueries "github.com/chun-wei0413/pingnom/internal/application/queries/user"
 	"github.com/chun-wei0413/pingnom/internal/domain/user"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/config"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/inmemory"
+	"github.com/chun-wei0413/pingnom/internal/infrastructure/auth"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/handlers"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/middleware"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/routes"
@@ -30,12 +32,17 @@ func main() {
 	// 依賴注入 - 建立 InMemory Repository
 	userRepo := inmemory.NewInMemoryUserRepository()
 	
+	// 依賴注入 - 建立 JWT Service
+	jwtService := auth.NewJWTService("your-secret-key", 24) // 24小時過期
+	
 	// 依賴注入 - 建立 Domain Services
 	userService := user.NewUserService(userRepo)
 	
 	// 依賴注入 - 建立 Command Handlers
 	registerUserHandler := usercommands.NewRegisterUserHandler(userService)
 	updateProfileHandler := usercommands.NewUpdateProfileHandler(userService)
+	updatePreferencesHandler := usercommands.NewUpdatePreferencesHandler(userService)
+	updatePrivacyHandler := usercommands.NewUpdatePrivacyHandler(userService)
 	changePasswordHandler := usercommands.NewChangePasswordHandler(userService)
 	
 	// 依賴注入 - 建立 Query Handlers
@@ -46,13 +53,40 @@ func main() {
 	userHandler := handlers.NewUserHandler(
 		registerUserHandler,
 		updateProfileHandler,
+		updatePreferencesHandler,
+		updatePrivacyHandler,
 		changePasswordHandler,
 		getUserProfileHandler,
 		searchUsersHandler,
 	)
 	
+	// 依賴注入 - 建立 Auth Command Handlers
+	loginHandler := authcommands.NewLoginHandler(userService, jwtService)
+	
+	// 依賴注入 - 建立 Auth HTTP Handler
+	authHandler := handlers.NewAuthHandler(loginHandler)
+	friendshipHandler := &handlers.FriendshipHandler{}
+	pingHandler := &handlers.PingHandler{}
+	restaurantHandler := &handlers.RestaurantHandler{}
+	
+	// 建立測試帳號
+	ctx := context.Background()
+	testUser1, err := userService.RegisterUser(ctx, "testuser@pingnom.app", "", "TestPassword2024!", "Frank Li")
+	if err != nil {
+		log.Printf("Failed to create test user Frank Li: %v", err)
+	} else {
+		log.Printf("Test user Frank Li created successfully: %s", testUser1.ID.String())
+	}
+	
+	testUser2, err := userService.RegisterUser(ctx, "alice@pingnom.app", "", "AlicePassword2024!", "Alice Wang")
+	if err != nil {
+		log.Printf("Failed to create test user Alice Wang: %v", err)
+	} else {
+		log.Printf("Test user Alice Wang created successfully: %s", testUser2.ID.String())
+	}
+	
 	// 依賴注入 - 建立 Middleware
-	authMiddleware := middleware.NewAuthMiddleware(cfg)
+	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	
 	// 設定 Gin 模式
 	if cfg.Environment == "production" {
@@ -68,7 +102,7 @@ func main() {
 	engine.Use(middleware.CORS(cfg))
 	
 	// 設定路由
-	router := routes.NewRouter(userHandler, authMiddleware)
+	router := routes.NewRouter(userHandler, authHandler, friendshipHandler, pingHandler, restaurantHandler, authMiddleware)
 	router.SetupRoutes(engine)
 	
 	// 建立 HTTP 服務器
