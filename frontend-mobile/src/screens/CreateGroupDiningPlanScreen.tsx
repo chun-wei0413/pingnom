@@ -14,12 +14,16 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootState, AppDispatch } from '../store';
+import type { GroupDiningStackParamList } from '../navigation/AppNavigator';
 import { createGroupDiningPlan } from '../store/groupDiningSlice';
+
+type CreateGroupDiningPlanScreenNavigationProp = StackNavigationProp<GroupDiningStackParamList, 'CreateGroupDiningPlan'>;
 
 const CreateGroupDiningPlanScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<CreateGroupDiningPlanScreenNavigationProp>();
   
   const { user } = useSelector((state: RootState) => state.auth);
   const { loading } = useSelector((state: RootState) => state.groupDining);
@@ -53,7 +57,7 @@ const CreateGroupDiningPlanScreen: React.FC = () => {
           onPress: () => {
             navigation.goBack();
             // Navigate to plan detail with the created plan ID
-            navigation.navigate('GroupDiningPlanDetail' as never, { planId: result.id } as never);
+            navigation.navigate('GroupDiningPlanDetail', { planId: result.id });
           },
         },
       ]);

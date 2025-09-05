@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootState, AppDispatch } from '../store';
+import type { GroupDiningStackParamList } from '../navigation/AppNavigator';
 import type { TimeSlot, RestaurantOption } from '../types/api';
 import { 
   fetchGroupDiningPlan,
@@ -26,9 +28,11 @@ interface RouteParams {
   planId: string;
 }
 
+type GroupDiningPlanDetailScreenNavigationProp = StackNavigationProp<GroupDiningStackParamList, 'GroupDiningPlanDetail'>;
+
 const GroupDiningPlanDetailScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<GroupDiningPlanDetailScreenNavigationProp>();
   const route = useRoute();
   const { planId } = route.params as RouteParams;
   
@@ -117,19 +121,21 @@ const GroupDiningPlanDetailScreen: React.FC = () => {
   };
 
   const navigateToAddTimeSlot = () => {
-    navigation.navigate('AddTimeSlot' as never, { planId } as never);
+    // TODO: AddTimeSlot screen not implemented yet
+    Alert.alert('功能開發中', '新增時間選項功能即將推出');
   };
 
   const navigateToAddRestaurant = () => {
-    navigation.navigate('AddRestaurant' as never, { planId } as never);
+    // TODO: AddRestaurant screen not implemented yet
+    Alert.alert('功能開發中', '新增餐廳選項功能即將推出');
   };
 
   const navigateToVoting = () => {
-    navigation.navigate('VotingScreen' as never, { planId } as never);
+    navigation.navigate('Voting', { planId });
   };
 
   const navigateToResults = () => {
-    navigation.navigate('VotingResults' as never, { planId } as never);
+    navigation.navigate('VotingResults', { planId });
   };
 
   if (!currentPlan) {

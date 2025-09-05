@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootState, AppDispatch } from '../store';
+import type { GroupDiningStackParamList } from '../navigation/AppNavigator';
 import type { TimeSlot, RestaurantOption } from '../types/api';
 import { 
   fetchVotingResults,
@@ -24,9 +26,11 @@ interface RouteParams {
   planId: string;
 }
 
+type VotingResultsScreenNavigationProp = StackNavigationProp<GroupDiningStackParamList, 'VotingResults'>;
+
 const VotingResultsScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<VotingResultsScreenNavigationProp>();
   const route = useRoute();
   const { planId } = route.params as RouteParams;
   

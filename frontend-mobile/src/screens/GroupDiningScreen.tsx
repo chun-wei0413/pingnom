@@ -12,16 +12,20 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootState, AppDispatch } from '../store';
+import type { GroupDiningStackParamList } from '../navigation/AppNavigator';
 import type { GroupDiningPlan } from '../types/api';
 import { 
   fetchGroupDiningPlans, 
   clearError 
 } from '../store/groupDiningSlice';
 
+type GroupDiningScreenNavigationProp = StackNavigationProp<GroupDiningStackParamList>;
+
 const GroupDiningScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<GroupDiningScreenNavigationProp>();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'created' | 'joined'>('created');
   
@@ -59,11 +63,11 @@ const GroupDiningScreen: React.FC = () => {
   };
 
   const navigateToCreatePlan = () => {
-    navigation.navigate('CreateGroupDiningPlan' as never);
+    navigation.navigate('CreateGroupDiningPlan');
   };
 
   const navigateToPlanDetail = (plan: GroupDiningPlan) => {
-    navigation.navigate('GroupDiningPlanDetail' as never, { planId: plan.id } as never);
+    navigation.navigate('GroupDiningPlanDetail', { planId: plan.id });
   };
 
   const getStatusColor = (status: string) => {

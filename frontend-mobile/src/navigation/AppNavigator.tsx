@@ -11,6 +11,10 @@ import DashboardScreen from '../screens/DashboardScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import GroupDiningScreen from '../screens/GroupDiningScreen';
+import CreateGroupDiningPlanScreen from '../screens/CreateGroupDiningPlanScreen';
+import GroupDiningPlanDetailScreen from '../screens/GroupDiningPlanDetailScreen';
+import VotingScreen from '../screens/VotingScreen';
+import VotingResultsScreen from '../screens/VotingResultsScreen';
 
 // Navigation type definitions
 export type RootStackParamList = {
@@ -30,9 +34,18 @@ export type MainTabParamList = {
   Profile: undefined;
 };
 
+export type GroupDiningStackParamList = {
+  GroupDiningHome: undefined;
+  CreateGroupDiningPlan: undefined;
+  GroupDiningPlanDetail: { planId: string };
+  Voting: { planId: string };
+  VotingResults: { planId: string };
+};
+
 const RootStack = createStackNavigator<RootStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
+const GroupDiningStack = createStackNavigator<GroupDiningStackParamList>();
 
 // Auth Navigator
 function AuthNavigator() {
@@ -40,6 +53,60 @@ function AuthNavigator() {
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
     </AuthStack.Navigator>
+  );
+}
+
+// Group Dining Stack Navigator
+function GroupDiningNavigator() {
+  return (
+    <GroupDiningStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#3b82f6',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <GroupDiningStack.Screen 
+        name="GroupDiningHome" 
+        component={GroupDiningScreen}
+        options={{
+          title: '聚餐計畫',
+          headerShown: false,
+        }}
+      />
+      <GroupDiningStack.Screen 
+        name="CreateGroupDiningPlan" 
+        component={CreateGroupDiningPlanScreen}
+        options={{
+          title: '建立聚餐計畫',
+        }}
+      />
+      <GroupDiningStack.Screen 
+        name="GroupDiningPlanDetail" 
+        component={GroupDiningPlanDetailScreen}
+        options={{
+          title: '聚餐計畫詳情',
+        }}
+      />
+      <GroupDiningStack.Screen 
+        name="Voting" 
+        component={VotingScreen}
+        options={{
+          title: '投票選擇',
+        }}
+      />
+      <GroupDiningStack.Screen 
+        name="VotingResults" 
+        component={VotingResultsScreen}
+        options={{
+          title: '投票結果',
+        }}
+      />
+    </GroupDiningStack.Navigator>
   );
 }
 
@@ -67,7 +134,7 @@ function MainNavigator() {
       />
       <MainTab.Screen 
         name="GroupDining" 
-        component={GroupDiningScreen}
+        component={GroupDiningNavigator}
         options={{
           title: '聚餐',
           headerShown: false,
