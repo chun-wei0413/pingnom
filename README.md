@@ -114,6 +114,94 @@ To make spontaneous dining with friends as easy as sending a text, creating a wo
 
 Focus on core functionality design and user experience to create the best social dining experience!
 
+## 🚀 開發環境啟動指南
+
+### 前置需求
+- **Node.js** (v18 或以上)
+- **Go** (v1.21 或以上)
+- **Expo CLI**: `npm install -g expo-cli`
+- **Expo Go App** (手機安裝)
+
+### 🔧 後端啟動 (Golang API Server)
+
+1. **進入後端目錄**：
+   ```bash
+   cd backend
+   ```
+
+2. **啟動後端服務**：
+   ```bash
+   go run cmd/api/main_inmemory.go
+   ```
+
+3. **驗證後端運行**：
+   - 服務將運行在 `http://localhost:8090`
+   - 可使用 Postman 或瀏覽器測試 API 端點
+
+### 📱 前端啟動 (React Native + Expo)
+
+1. **進入前端目錄**：
+   ```bash
+   cd frontend-mobile
+   ```
+
+2. **安裝依賴包**（首次運行）：
+   ```bash
+   npm install
+   ```
+
+3. **啟動 Expo 開發服務器**：
+   ```bash
+   npm start
+   # 或使用
+   expo start
+   ```
+
+4. **在手機上預覽應用**：
+   - 打開 **Expo Go** app
+   - 掃描終端機或瀏覽器中的 QR code
+   - 應用將自動載入到您的手機
+
+### 📋 完整啟動流程
+
+1. **同時開啟兩個終端視窗**
+
+2. **終端 1 - 後端**：
+   ```bash
+   cd backend
+   go run cmd/api/main_inmemory.go
+   ```
+
+3. **終端 2 - 前端**：
+   ```bash
+   cd frontend-mobile
+   npm start
+   ```
+
+4. **手機測試**：
+   - 確保手機和電腦在同一網路
+   - 使用 Expo Go 掃描 QR code
+   - 開始測試應用功能
+
+### 🧪 測試帳號
+
+快速登入測試帳號（開發模式）：
+
+- **主要測試帳號 (Frank Li)**
+  - Email: `testuser@pingnom.app`
+  - 密碼: `TestPassword2024!`
+
+- **輔助測試帳號 (Alice Wang)**
+  - Email: `alice@pingnom.app`
+  - 密碼: `AlicePassword2024!`
+
+### 🔍 常見問題
+
+- **後端無法啟動**：檢查 Go 版本和路徑
+- **前端無法連線**：確保後端服務已啟動
+- **QR code 掃描失敗**：檢查網路連線，確保手機和電腦在同一 WiFi
+- **Expo Go 無法載入**：嘗試清除 Expo Go 快取或重啟應用
+
 ---
 
 **Made with 🧡 for food lovers who miss their friends**

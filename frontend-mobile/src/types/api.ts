@@ -86,3 +86,115 @@ export interface DashboardStats {
   totalFriends: number;
   pendingRequests: number;
 }
+
+// Group Dining 相關
+export interface GroupDiningPlan {
+  id: string;
+  created_by: string;
+  title: string;
+  description: string;
+  status: 'planning' | 'voting' | 'finalized' | 'cancelled';
+  time_slots: TimeSlot[];
+  restaurant_options: RestaurantOption[];
+  participants: Participant[];
+  confirmed_time_slot?: TimeSlot;
+  confirmed_restaurant?: RestaurantOption;
+  created_at: string;
+  updated_at: string;
+  voting_deadline?: string;
+}
+
+export interface TimeSlot {
+  id: string;
+  start_time: string;
+  end_time: string;
+  description: string;
+  vote_count: number;
+}
+
+export interface RestaurantOption {
+  id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  cuisine_type: string;
+  vote_count: number;
+}
+
+export interface Participant {
+  user_id: string;
+  display_name: string;
+  joined_at: string;
+  has_voted: boolean;
+}
+
+export interface CreateGroupDiningPlanRequest {
+  created_by: string;
+  title: string;
+  description: string;
+}
+
+export interface AddTimeSlotRequest {
+  plan_id: string;
+  start_time: string;
+  end_time: string;
+  description: string;
+}
+
+export interface AddRestaurantOptionRequest {
+  plan_id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  cuisine_type: string;
+}
+
+export interface JoinGroupDiningPlanRequest {
+  plan_id: string;
+  user_id: string;
+  display_name: string;
+}
+
+export interface StartVotingRequest {
+  plan_id: string;
+  voting_deadline?: string;
+}
+
+export interface SubmitVoteRequest {
+  plan_id: string;
+  user_id: string;
+  time_slot_ids: string[];
+  restaurant_ids: string[];
+  comment?: string;
+}
+
+export interface FinalizeGroupDiningPlanRequest {
+  plan_id: string;
+  time_slot_id: string;
+  restaurant_id: string;
+}
+
+export interface Vote {
+  id: string;
+  plan_id: string;
+  user_id: string;
+  choices: VoteChoice[];
+  comment?: string;
+  voted_at: string;
+}
+
+export interface VoteChoice {
+  id: string;
+  type: 'time_slot' | 'restaurant';
+  option_id: string;
+}
+
+export interface VotingResults {
+  total_participants: number;
+  voted_participants: number;
+  voting_progress: number;
+  time_slots: TimeSlot[];
+  restaurants: RestaurantOption[];
+}

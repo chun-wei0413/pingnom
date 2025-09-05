@@ -144,16 +144,8 @@ func main() {
 	engine.Use(corsMiddleware())
 	
 	// 使用新的 Router 來設定路由
-	router := routes.NewRouter(userHandler, friendshipHandler, pingHandler, restaurantHandler, authMiddleware)
+	router := routes.NewRouter(userHandler, authHandler, friendshipHandler, pingHandler, restaurantHandler, authMiddleware)
 	router.SetupRoutes(engine)
-	
-	// 認證路由 (Public)
-	auth := engine.Group("/api/v1/auth")
-	{
-		auth.POST("/login", authHandler.Login)
-		auth.POST("/logout", authHandler.Logout)
-		auth.POST("/refresh", authHandler.RefreshToken)
-	}
 	
 	// Group Dining 路由 (Require Auth)
 	groupDining := engine.Group("/api/v1/group-dining")

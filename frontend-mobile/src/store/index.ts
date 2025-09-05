@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authSlice from './authSlice';
+import groupDiningSlice from './groupDiningSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authSlice,
+    groupDining: groupDiningSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

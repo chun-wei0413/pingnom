@@ -5,19 +5,24 @@ import type { AuthResponse, LoginRequest, RegisterRequest } from '../types/api';
 // API 服務類別
 export class ApiService {
   private api: AxiosInstance;
+  private authToken: string | null = null;
 
   constructor() {
     this.api = axios.create({
-      baseURL: 'http://localhost:8080/api/v1',
+      baseURL: 'http://192.168.1.4:8090/api/v1',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
     // 請求攔截器 - 添加 JWT token
-    this.api.interceptors.request.use((config) => {
-      // 在 React Native 中，我們需要使用 AsyncStorage 來儲存 token
-      // 暫時先不處理，等等再實作
+    this.api.interceptors.request.use(async (config) => {
+      // 從 Redux store 或 AsyncStorage 獲取 token
+      // 暫時從 global 變數獲取，之後需要改進
+      const token = this.getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
       return config;
     });
 
@@ -56,15 +61,31 @@ export class ApiService {
     const response = await this.post('/auth/login', { email, password });
     // 適配後端回應格式到前端期待的格式
     const backendData = response.data.data;
+    const token = backendData.accessToken;
+    
+    // 設置 token 到實例中
+    this.setAuthToken(token);
+    
     return {
-      token: backendData.accessToken,
+      token: token,
       user: {
-        id: '', // 暫時空白，之後可以從 JWT token 解析
+        id: this.parseUserIdFromToken(token),
         email: email, // 使用輸入的 email
         display_name: backendData.user.displayName,
         created_at: new Date().toISOString(),
       }
     };
+  }
+
+  // 從 JWT token 解析 user ID
+  private parseUserIdFromToken(token: string): string {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.user_id || payload.sub || '';
+    } catch (error) {
+      console.error('Failed to parse token:', error);
+      return '';
+    }
   }
 
   async register(email: string, password: string, displayName: string): Promise<AuthResponse> {
@@ -101,6 +122,19 @@ export class ApiService {
   async respondToFriendRequest(requestId: string, action: 'accept' | 'decline') {
     const response = await this.put(`/friends/request/${requestId}/${action}`);
     return response.data;
+  }
+
+  // Token 管理方法
+  setAuthToken(token: string) {
+    this.authToken = token;
+  }
+
+  getAuthToken(): string | null {
+    return this.authToken;
+  }
+
+  clearAuthToken() {
+    this.authToken = null;
   }
 }
 

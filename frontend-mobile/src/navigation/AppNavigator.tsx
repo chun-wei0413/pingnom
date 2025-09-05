@@ -5,11 +5,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 
-// Import screens (we'll create these next)
+// Import screens
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import GroupDiningScreen from '../screens/GroupDiningScreen';
 
 // Navigation type definitions
 export type RootStackParamList = {
@@ -24,6 +25,7 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
+  GroupDining: undefined;
   Friends: undefined;
   Profile: undefined;
 };
@@ -60,6 +62,14 @@ function MainNavigator() {
         component={DashboardScreen}
         options={{
           title: '首頁',
+          headerShown: false,
+        }}
+      />
+      <MainTab.Screen 
+        name="GroupDining" 
+        component={GroupDiningScreen}
+        options={{
+          title: '聚餐',
           headerShown: false,
         }}
       />
