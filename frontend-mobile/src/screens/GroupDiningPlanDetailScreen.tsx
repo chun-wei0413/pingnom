@@ -9,6 +9,9 @@ import {
   RefreshControl,
   SafeAreaView,
   StatusBar,
+  Modal,
+  TextInput,
+  Platform,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -20,6 +23,8 @@ import {
   fetchGroupDiningPlan,
   joinGroupDiningPlan,
   startVoting,
+  addTimeSlot,
+  addRestaurantOption,
   clearError,
   clearCurrentPlan
 } from '../store/groupDiningSlice';
@@ -38,6 +43,22 @@ const GroupDiningPlanDetailScreen: React.FC = () => {
   
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'voting'>('details');
+  
+  // Modal states
+  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+  const [showRestaurantModal, setShowRestaurantModal] = useState(false);
+  
+  // Time slot form states
+  const [timeSlotDescription, setTimeSlotDescription] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  
+  // Restaurant form states
+  const [restaurantName, setRestaurantName] = useState('');
+  const [restaurantAddress, setRestaurantAddress] = useState('');
+  const [cuisineType, setCuisineType] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   
   const { user } = useSelector((state: RootState) => state.auth);
   const { currentPlan, loading, error } = useSelector((state: RootState) => state.groupDining);
@@ -120,14 +141,88 @@ const GroupDiningPlanDetailScreen: React.FC = () => {
     );
   };
 
-  const navigateToAddTimeSlot = () => {
-    // TODO: AddTimeSlot screen not implemented yet
-    Alert.alert('功能開發中', '新增時間選項功能即將推出');
+  const openTimeSlotModal = () => {
+    setShowTimeSlotModal(true);
   };
 
-  const navigateToAddRestaurant = () => {
-    // TODO: AddRestaurant screen not implemented yet
-    Alert.alert('功能開發中', '新增餐廳選項功能即將推出');
+  const openRestaurantModal = () => {
+    setShowRestaurantModal(true);
+  };
+
+  const handleAddTimeSlot = async () => {
+    if (!timeSlotDescription.trim() || !startTime || !endTime) {
+      Alert.alert('錯誤', '請填寫完整的時間選項資訊');
+      return;
+    }
+
+    if (new Date(startTime) >= new Date(endTime)) {
+      Alert.alert('錯誤', '結束時間必須晚於開始時間');
+      return;
+    }
+
+    try {
+      await dispatch(addTimeSlot({
+        planId,
+        timeSlotData: {
+          description: timeSlotDescription.trim(),
+          start_time: startTime,
+          end_time: endTime,
+        }
+      })).unwrap();
+
+      // Reset form
+      setTimeSlotDescription('');
+      setStartTime('');
+      setEndTime('');
+      setShowTimeSlotModal(false);
+      
+      Alert.alert('成功', '時間選項已新增');
+    } catch (error) {
+      console.error('新增時間選項失敗:', error);
+      Alert.alert('錯誤', '新增時間選項失敗，請稍後再試');
+    }
+  };
+
+  const handleAddRestaurant = async () => {
+    if (!restaurantName.trim() || !restaurantAddress.trim() || !cuisineType.trim()) {
+      Alert.alert('錯誤', '請填寫完整的餐廳資訊');
+      return;
+    }
+
+    // Validate coordinates (optional for now, can use default values)
+    const lat = parseFloat(latitude) || 25.0330; // 默認台北市經緯度
+    const lng = parseFloat(longitude) || 121.5654;
+
+    if (isNaN(lat) || isNaN(lng)) {
+      Alert.alert('錯誤', '請輸入有效的經緯度座標');
+      return;
+    }
+
+    try {
+      await dispatch(addRestaurantOption({
+        planId,
+        restaurantData: {
+          name: restaurantName.trim(),
+          address: restaurantAddress.trim(),
+          latitude: lat,
+          longitude: lng,
+          cuisine_type: cuisineType.trim(),
+        }
+      })).unwrap();
+
+      // Reset form
+      setRestaurantName('');
+      setRestaurantAddress('');
+      setCuisineType('');
+      setLatitude('');
+      setLongitude('');
+      setShowRestaurantModal(false);
+      
+      Alert.alert('成功', '餐廳選項已新增');
+    } catch (error) {
+      console.error('新增餐廳選項失敗:', error);
+      Alert.alert('錯誤', '新增餐廳選項失敗，請稍後再試');
+    }
   };
 
   const navigateToVoting = () => {
@@ -180,7 +275,7 @@ const GroupDiningPlanDetailScreen: React.FC = () => {
         {isCreator && currentPlan.status === 'planning' && (
           <TouchableOpacity
             style={styles.addButton}
-            onPress={navigateToAddTimeSlot}
+            onPress={openTimeSlotModal}
           >
             <Text style={styles.addButtonText}>+ 新增</Text>
           </TouchableOpacity>
@@ -213,7 +308,7 @@ const GroupDiningPlanDetailScreen: React.FC = () => {
         {isCreator && currentPlan.status === 'planning' && (
           <TouchableOpacity
             style={styles.addButton}
-            onPress={navigateToAddRestaurant}
+            onPress={openRestaurantModal}
           >
             <Text style={styles.addButtonText}>+ 新增</Text>
           </TouchableOpacity>
@@ -261,6 +356,172 @@ const GroupDiningPlanDetailScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
+      {/* Time Slot Modal */}
+      <Modal
+        visible={showTimeSlotModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowTimeSlotModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>新增時間選項</Text>
+              <TouchableOpacity onPress={() => setShowTimeSlotModal(false)}>
+                <Text style={styles.modalCloseButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>描述 *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={timeSlotDescription}
+                  onChangeText={setTimeSlotDescription}
+                  placeholder="例如：週五晚餐時間"
+                  maxLength={100}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>開始時間 *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={startTime}
+                  onChangeText={setStartTime}
+                  placeholder="2024-12-01T18:00:00Z"
+                />
+                <Text style={styles.inputHint}>格式：YYYY-MM-DDTHH:MM:SSZ</Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>結束時間 *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={endTime}
+                  onChangeText={setEndTime}
+                  placeholder="2024-12-01T20:00:00Z"
+                />
+                <Text style={styles.inputHint}>格式：YYYY-MM-DDTHH:MM:SSZ</Text>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => setShowTimeSlotModal(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalConfirmButton]}
+                onPress={handleAddTimeSlot}
+                disabled={loading}
+              >
+                <Text style={styles.modalConfirmButtonText}>
+                  {loading ? '新增中...' : '新增'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Restaurant Modal */}
+      <Modal
+        visible={showRestaurantModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowRestaurantModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>新增餐廳選項</Text>
+              <TouchableOpacity onPress={() => setShowRestaurantModal(false)}>
+                <Text style={styles.modalCloseButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>餐廳名稱 *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={restaurantName}
+                  onChangeText={setRestaurantName}
+                  placeholder="例如：鼎泰豐"
+                  maxLength={100}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>餐廳地址 *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={restaurantAddress}
+                  onChangeText={setRestaurantAddress}
+                  placeholder="例如：台北市大安區信義路二段"
+                  maxLength={200}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>菜系類型 *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={cuisineType}
+                  onChangeText={setCuisineType}
+                  placeholder="例如：中式、日式、西式"
+                  maxLength={50}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>緯度 (可選)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={latitude}
+                  onChangeText={setLatitude}
+                  placeholder="例如：25.0330 (默認台北市)"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>經度 (可選)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={longitude}
+                  onChangeText={setLongitude}
+                  placeholder="例如：121.5654 (默認台北市)"
+                  keyboardType="numeric"
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => setShowRestaurantModal(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalConfirmButton]}
+                onPress={handleAddRestaurant}
+                disabled={loading}
+              >
+                <Text style={styles.modalConfirmButtonText}>
+                  {loading ? '新增中...' : '新增'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -550,6 +811,98 @@ const styles = StyleSheet.create({
   },
   voteButtonText: {
     color: '#ffffff',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  modalCloseButton: {
+    fontSize: 20,
+    color: '#6c757d',
+    fontWeight: 'bold',
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    maxHeight: 400,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#495057',
+  },
+  inputHint: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 5,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: 30,
+    gap: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  modalConfirmButton: {
+    backgroundColor: '#3498db',
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    color: '#6c757d',
+    fontWeight: '600',
+  },
+  modalConfirmButtonText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '600',
   },
 });
 
