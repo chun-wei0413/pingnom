@@ -8,14 +8,22 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	usercommands "github.com/chun-wei0413/pingnom/internal/application/commands/user"
 	authcommands "github.com/chun-wei0413/pingnom/internal/application/commands/auth"
+	activitycommands "github.com/chun-wei0413/pingnom/internal/application/commands/activity"
+	reviewcommands "github.com/chun-wei0413/pingnom/internal/application/commands/review"
 	userqueries "github.com/chun-wei0413/pingnom/internal/application/queries/user"
+	activityqueries "github.com/chun-wei0413/pingnom/internal/application/queries/activity"
+	reviewqueries "github.com/chun-wei0413/pingnom/internal/application/queries/review"
+	statisticsqueries "github.com/chun-wei0413/pingnom/internal/application/queries/statistics"
 	"github.com/chun-wei0413/pingnom/internal/domain/user"
+	"github.com/chun-wei0413/pingnom/internal/domain/statistics"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/config"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/inmemory"
+	inmemorypersistence "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/auth"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/handlers"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/middleware"
@@ -29,25 +37,46 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 	
-	// 依賴注入 - 建立 InMemory Repository
+	// 依賴注入 - 建立 InMemory Repositories
 	userRepo := inmemory.NewInMemoryUserRepository()
+	activityRepo := inmemorypersistence.NewActivityHistoryInMemoryRepository()
+	reviewRepo := inmemorypersistence.NewRestaurantReviewInMemoryRepository()
 	
 	// 依賴注入 - 建立 JWT Service
-	jwtService := auth.NewJWTService("your-secret-key", 24) // 24小時過期
+	jwtService := auth.NewJWTService("your-secret-key", 24*time.Hour) // 24小時過期
 	
 	// 依賴注入 - 建立 Domain Services
 	userService := user.NewUserService(userRepo)
+	statisticsService := statistics.NewStatisticsService(activityRepo, reviewRepo)
 	
-	// 依賴注入 - 建立 Command Handlers
+	// 依賴注入 - 建立 User Command Handlers
 	registerUserHandler := usercommands.NewRegisterUserHandler(userService)
 	updateProfileHandler := usercommands.NewUpdateProfileHandler(userService)
 	updatePreferencesHandler := usercommands.NewUpdatePreferencesHandler(userService)
 	updatePrivacyHandler := usercommands.NewUpdatePrivacyHandler(userService)
 	changePasswordHandler := usercommands.NewChangePasswordHandler(userService)
 	
-	// 依賴注入 - 建立 Query Handlers
+	// 依賴注入 - 建立 Activity Command Handlers
+	createActivityHistoryHandler := activitycommands.NewCreateActivityHistoryHandler(activityRepo)
+	updateActivityHistoryHandler := activitycommands.NewUpdateActivityHistoryHandler(activityRepo)
+	
+	// 依賴注入 - 建立 Review Command Handlers
+	createReviewHandler := reviewcommands.NewCreateRestaurantReviewHandler(reviewRepo)
+	updateReviewHandler := reviewcommands.NewUpdateRestaurantReviewHandler(reviewRepo)
+	
+	// 依賴注入 - 建立 User Query Handlers
 	getUserProfileHandler := userqueries.NewGetUserProfileHandler(userRepo)
 	searchUsersHandler := userqueries.NewSearchUsersHandler(userService)
+	
+	// 依賴注入 - 建立 Activity Query Handlers
+	getUserActivityHistoryHandler := activityqueries.NewGetUserActivityHistoryHandler(activityRepo)
+	
+	// 依賴注入 - 建立 Review Query Handlers
+	getRestaurantReviewsHandler := reviewqueries.NewGetRestaurantReviewsHandler(reviewRepo)
+	getUserReviewsHandler := reviewqueries.NewGetUserReviewsHandler(reviewRepo)
+	
+	// 依賴注入 - 建立 Statistics Query Handlers
+	getUserStatisticsHandler := statisticsqueries.NewGetUserStatisticsHandler(statisticsService)
 	
 	// 依賴注入 - 建立 HTTP Handlers
 	userHandler := handlers.NewUserHandler(
@@ -58,6 +87,26 @@ func main() {
 		changePasswordHandler,
 		getUserProfileHandler,
 		searchUsersHandler,
+	)
+	
+	// 依賴注入 - 建立 Activity History Handler
+	activityHistoryHandler := handlers.NewActivityHistoryHandler(
+		createActivityHistoryHandler,
+		updateActivityHistoryHandler,
+		getUserActivityHistoryHandler,
+	)
+	
+	// 依賴注入 - 建立 Restaurant Review Handler
+	restaurantReviewHandler := handlers.NewRestaurantReviewHandler(
+		createReviewHandler,
+		updateReviewHandler,
+		getRestaurantReviewsHandler,
+		getUserReviewsHandler,
+	)
+	
+	// 依賴注入 - 建立 Statistics Handler
+	statisticsHandler := handlers.NewStatisticsHandler(
+		getUserStatisticsHandler,
 	)
 	
 	// 依賴注入 - 建立 Auth Command Handlers
@@ -102,7 +151,17 @@ func main() {
 	engine.Use(middleware.CORS(cfg))
 	
 	// 設定路由
-	router := routes.NewRouter(userHandler, authHandler, friendshipHandler, pingHandler, restaurantHandler, authMiddleware)
+	router := routes.NewRouter(
+		userHandler, 
+		authHandler, 
+		friendshipHandler, 
+		pingHandler, 
+		restaurantHandler,
+		activityHistoryHandler,
+		restaurantReviewHandler,
+		statisticsHandler,
+		authMiddleware,
+	)
 	router.SetupRoutes(engine)
 	
 	// 建立 HTTP 服務器

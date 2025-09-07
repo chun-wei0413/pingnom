@@ -12,16 +12,32 @@ type Router struct {
 	friendshipHandler *handlers.FriendshipHandler
 	pingHandler *handlers.PingHandler
 	restaurantHandler *handlers.RestaurantHandler
+	activityHistoryHandler *handlers.ActivityHistoryHandler
+	restaurantReviewHandler *handlers.RestaurantReviewHandler
+	statisticsHandler *handlers.StatisticsHandler
 	authMiddleware *middleware.AuthMiddleware
 }
 
-func NewRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHandler, friendshipHandler *handlers.FriendshipHandler, pingHandler *handlers.PingHandler, restaurantHandler *handlers.RestaurantHandler, authMiddleware *middleware.AuthMiddleware) *Router {
+func NewRouter(
+	userHandler *handlers.UserHandler, 
+	authHandler *handlers.AuthHandler, 
+	friendshipHandler *handlers.FriendshipHandler, 
+	pingHandler *handlers.PingHandler, 
+	restaurantHandler *handlers.RestaurantHandler,
+	activityHistoryHandler *handlers.ActivityHistoryHandler,
+	restaurantReviewHandler *handlers.RestaurantReviewHandler,
+	statisticsHandler *handlers.StatisticsHandler,
+	authMiddleware *middleware.AuthMiddleware,
+) *Router {
 	return &Router{
 		userHandler: userHandler,
 		authHandler: authHandler,
 		friendshipHandler: friendshipHandler,
 		pingHandler: pingHandler,
 		restaurantHandler: restaurantHandler,
+		activityHistoryHandler: activityHistoryHandler,
+		restaurantReviewHandler: restaurantReviewHandler,
+		statisticsHandler: statisticsHandler,
 		authMiddleware: authMiddleware,
 	}
 }
@@ -116,6 +132,42 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			
 			// Get restaurant by ID
 			restaurants.GET("/:id", r.restaurantHandler.GetRestaurantByID)
+			
+			// Get restaurant reviews
+			restaurants.GET("/:restaurant_id/reviews", r.restaurantReviewHandler.GetRestaurantReviews)
+		}
+		
+		// Activity History routes
+		activities := protected.Group("/activities")
+		{
+			// Create activity history
+			activities.POST("/", r.activityHistoryHandler.CreateActivityHistory)
+			
+			// Update activity history
+			activities.PUT("/:id", r.activityHistoryHandler.UpdateActivityHistory)
+			
+			// Get user's activity history
+			activities.GET("/", r.activityHistoryHandler.GetUserActivityHistory)
+		}
+		
+		// Restaurant Review routes
+		reviews := protected.Group("/reviews")
+		{
+			// Create restaurant review
+			reviews.POST("/", r.restaurantReviewHandler.CreateRestaurantReview)
+			
+			// Update restaurant review
+			reviews.PUT("/:id", r.restaurantReviewHandler.UpdateRestaurantReview)
+			
+			// Get user's reviews
+			reviews.GET("/", r.restaurantReviewHandler.GetUserReviews)
+		}
+		
+		// User Statistics routes
+		statistics := protected.Group("/statistics")
+		{
+			// Get user statistics
+			statistics.GET("/", r.statisticsHandler.GetUserStatistics)
 		}
 	}
 }

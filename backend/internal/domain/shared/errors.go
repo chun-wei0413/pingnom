@@ -9,6 +9,7 @@ var (
 	ErrUnauthorized      = errors.New("unauthorized access")
 	ErrPermissionDenied  = errors.New("permission denied")
 	ErrResourceConflict  = errors.New("resource conflict")
+	ErrInvalidID         = errors.New("invalid ID format")
 	
 	// User Domain Errors
 	ErrUserNotFound       = errors.New("user not found")
@@ -38,6 +39,16 @@ var (
 	// Restaurant Domain Errors
 	ErrRestaurantNotFound = errors.New("restaurant not found")
 	ErrInvalidLocation    = errors.New("invalid location coordinates")
+	
+	// Activity Domain Errors
+	ErrActivityHistoryNotFound = errors.New("activity history not found")
+	ErrInvalidActivityStatus   = errors.New("invalid activity status")
+	ErrInvalidParticipants     = errors.New("participants must be greater than 0")
+	
+	// Review Domain Errors
+	ErrReviewNotFound          = errors.New("review not found")
+	ErrReviewAlreadyExists     = errors.New("review already exists for this activity")
+	ErrInvalidRating          = errors.New("rating must be between 1 and 5")
 )
 
 type DomainError struct {
