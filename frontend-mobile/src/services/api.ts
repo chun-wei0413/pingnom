@@ -114,13 +114,36 @@ export class ApiService {
     return response.data;
   }
 
-  async sendFriendRequest(email: string) {
-    const response = await this.post('/friends/request', { email });
+  async getPendingRequests() {
+    const response = await this.get('/friends/requests/pending');
     return response.data;
   }
 
-  async respondToFriendRequest(requestId: string, action: 'accept' | 'decline') {
-    const response = await this.put(`/friends/request/${requestId}/${action}`);
+  async getSentRequests() {
+    const response = await this.get('/friends/requests/sent');
+    return response.data;
+  }
+
+  async searchUsers(email: string) {
+    const response = await this.get(`/users/search?email=${encodeURIComponent(email)}`);
+    return response.data;
+  }
+
+  async sendFriendRequest(addresseeId: string, message?: string) {
+    const response = await this.post('/friends/request', { 
+      addresseeId,
+      message: message || ''
+    });
+    return response.data;
+  }
+
+  async acceptFriendRequest(requestId: string) {
+    const response = await this.put(`/friends/request/${requestId}/accept`);
+    return response.data;
+  }
+
+  async declineFriendRequest(requestId: string) {
+    const response = await this.put(`/friends/request/${requestId}/decline`);
     return response.data;
   }
 
