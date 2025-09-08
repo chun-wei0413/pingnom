@@ -85,9 +85,9 @@ export default function FriendsScreen() {
     try {
       setLoading(true);
       const response = await api.searchUsers(searchEmail);
-      setSearchResults(response.users || []);
+      setSearchResults(response.data.users || []);
       
-      if (!response.users || response.users.length === 0) {
+      if (!response.data.users || response.data.users.length === 0) {
         Alert.alert('提示', '找不到相符的用戶');
       }
     } catch (error) {

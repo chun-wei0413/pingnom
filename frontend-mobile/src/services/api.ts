@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import type { AuthResponse, LoginRequest, RegisterRequest } from '../types/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // API 服務類別
 export class ApiService {
@@ -17,11 +18,13 @@ export class ApiService {
 
     // 請求攔截器 - 添加 JWT token
     this.api.interceptors.request.use(async (config) => {
-      // 從 Redux store 或 AsyncStorage 獲取 token
-      // 暫時從 global 變數獲取，之後需要改進
-      const token = this.getAuthToken();
+      // 從 AsyncStorage 獲取 token
+      const token = await this.getAuthToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log('API Request:', config.method?.toUpperCase(), config.url, 'with token:', token.substring(0, 20) + '...');
+      } else {
+        console.log('API Request:', config.method?.toUpperCase(), config.url, 'NO TOKEN');
       }
       return config;
     });
@@ -63,8 +66,9 @@ export class ApiService {
     const backendData = response.data.data;
     const token = backendData.accessToken;
     
-    // 設置 token 到實例中
+    // 設置 token 到實例中和 AsyncStorage
     this.setAuthToken(token);
+    await AsyncStorage.setItem('token', token);
     
     return {
       token: token,
@@ -110,8 +114,14 @@ export class ApiService {
 
   // 朋友相關方法
   async getFriends() {
-    const response = await this.get('/friends');
-    return response.data;
+    try {
+      const response = await this.get('/friends');
+      console.log('getFriends response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('getFriends error:', error);
+      throw error;
+    }
   }
 
   async getPendingRequests() {
@@ -152,12 +162,29 @@ export class ApiService {
     this.authToken = token;
   }
 
-  getAuthToken(): string | null {
-    return this.authToken;
+  async getAuthToken(): Promise<string | null> {
+    // 優先使用記憶體中的 token
+    if (this.authToken) {
+      return this.authToken;
+    }
+    
+    // 從 AsyncStorage 獲取 token
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        this.authToken = token; // 快取到記憶體
+        return token;
+      }
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+    }
+    
+    return null;
   }
 
   clearAuthToken() {
     this.authToken = null;
+    AsyncStorage.removeItem('token');
   }
 }
 
