@@ -16,6 +16,9 @@ export class ApiService {
       },
     });
 
+    // 初始化時預先載入 token
+    this.initializeToken();
+
     // 請求攔截器 - 添加 JWT token
     this.api.interceptors.request.use(async (config) => {
       // 從 AsyncStorage 獲取 token
@@ -34,12 +37,27 @@ export class ApiService {
       (response: AxiosResponse) => response,
       (error) => {
         if (error.response?.status === 401) {
-          // 清除 token 並跳轉到登入頁面
-          // 在 React Native 中需要使用不同的方式處理
+          console.log('API Error 401: Unauthorized, clearing token');
+          this.clearAuthToken();
         }
         return Promise.reject(error);
       }
     );
+  }
+
+  // 初始化時載入 token
+  private async initializeToken() {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        this.authToken = token;
+        console.log('Token loaded from AsyncStorage on initialization:', token.substring(0, 20) + '...');
+      } else {
+        console.log('No token found in AsyncStorage on initialization');
+      }
+    } catch (error) {
+      console.error('Error loading token on initialization:', error);
+    }
   }
 
   // 提供基本的 HTTP 方法
@@ -66,9 +84,13 @@ export class ApiService {
     const backendData = response.data.data;
     const token = backendData.accessToken;
     
+    console.log('Login successful, received token:', token.substring(0, 20) + '...');
+    
     // 設置 token 到實例中和 AsyncStorage
     this.setAuthToken(token);
     await AsyncStorage.setItem('token', token);
+    
+    console.log('Token saved to memory and AsyncStorage');
     
     return {
       token: token,
@@ -115,7 +137,7 @@ export class ApiService {
   // 朋友相關方法
   async getFriends() {
     try {
-      const response = await this.get('/friends');
+      const response = await this.get('/friends/');
       console.log('getFriends response:', response.data);
       return response.data;
     } catch (error) {
@@ -165,12 +187,14 @@ export class ApiService {
   async getAuthToken(): Promise<string | null> {
     // 優先使用記憶體中的 token
     if (this.authToken) {
+      console.log('Using token from memory:', this.authToken.substring(0, 20) + '...');
       return this.authToken;
     }
     
     // 從 AsyncStorage 獲取 token
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('Token from AsyncStorage:', token ? token.substring(0, 20) + '...' : 'null');
       if (token) {
         this.authToken = token; // 快取到記憶體
         return token;
@@ -179,6 +203,7 @@ export class ApiService {
       console.error('Error getting auth token:', error);
     }
     
+    console.log('No token available - user needs to login');
     return null;
   }
 
