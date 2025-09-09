@@ -10,7 +10,7 @@ export class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: 'http://192.168.1.4:8090/api/v1',
+      baseURL: 'http://192.168.1.4:8090/api/v1', // 維持局域網 IP 給手機使用
       headers: {
         'Content-Type': 'application/json',
       },
@@ -21,24 +21,31 @@ export class ApiService {
 
     // 請求攔截器 - 添加 JWT token
     this.api.interceptors.request.use(async (config) => {
-      // 從 AsyncStorage 獲取 token
-      const token = await this.getAuthToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-        console.log('API Request:', config.method?.toUpperCase(), config.url, 'with token:', token.substring(0, 20) + '...');
-      } else {
-        console.log('API Request:', config.method?.toUpperCase(), config.url, 'NO TOKEN');
+      try {
+        // 從 AsyncStorage 獲取 token
+        const token = await this.getAuthToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log('API Request:', config.method?.toUpperCase(), config.url, 'with token:', token.substring(0, 20) + '...');
+        } else {
+          console.log('API Request:', config.method?.toUpperCase(), config.url, 'NO TOKEN');
+        }
+      } catch (error) {
+        console.error('Error in request interceptor:', error);
       }
       return config;
+    }, (error) => {
+      console.error('Request interceptor error:', error);
+      return Promise.reject(error);
     });
 
     // 回應攔截器 - 處理錯誤
     this.api.interceptors.response.use(
       (response: AxiosResponse) => response,
-      (error) => {
+      async (error) => {
         if (error.response?.status === 401) {
           console.log('API Error 401: Unauthorized, clearing token');
-          this.clearAuthToken();
+          await this.clearAuthToken();
         }
         return Promise.reject(error);
       }
@@ -86,11 +93,16 @@ export class ApiService {
     
     console.log('Login successful, received token:', token.substring(0, 20) + '...');
     
-    // 設置 token 到實例中和 AsyncStorage
-    this.setAuthToken(token);
-    await AsyncStorage.setItem('token', token);
+    // 立即設置 token 到實例中
+    this.authToken = token;
     
-    console.log('Token saved to memory and AsyncStorage');
+    // 同時儲存到 AsyncStorage
+    try {
+      await AsyncStorage.setItem('token', token);
+      console.log('Token saved to memory and AsyncStorage');
+    } catch (error) {
+      console.error('Error saving token to AsyncStorage:', error);
+    }
     
     return {
       token: token,
@@ -123,14 +135,138 @@ export class ApiService {
     return response.data;
   }
 
+  // 用戶個人資料管理方法
+  async updateProfile(profileData: {
+    display_name?: string;
+    email?: string;
+  }) {
+    try {
+      const response = await this.put('/users/profile', profileData);
+      console.log('Update profile API response:', response.data);
+      return {
+        success: true,
+        data: response.data,
+        message: 'Profile updated successfully'
+      };
+    } catch (error: any) {
+      console.error('Update profile API error:', error.response?.data || error);
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Failed to update profile'
+      };
+    }
+  }
+
+  async getUserProfile() {
+    try {
+      const response = await this.get('/users/profile');
+      console.log('Get user profile API response:', response.data);
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      console.error('Get user profile API error:', error.response?.data || error);
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Failed to get user profile'
+      };
+    }
+  }
+
+  async updatePreferences(preferencesData: {
+    cuisineTypes?: string[];
+    restrictions?: string[];
+    minPrice?: number;
+    maxPrice?: number;
+  }) {
+    try {
+      const response = await this.put('/users/preferences', preferencesData);
+      console.log('Update preferences API response:', response.data);
+      return {
+        success: true,
+        data: response.data,
+        message: 'Preferences updated successfully'
+      };
+    } catch (error: any) {
+      console.error('Update preferences API error:', error.response?.data || error);
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Failed to update preferences'
+      };
+    }
+  }
+
+  async updatePrivacy(privacyData: {
+    isDiscoverable?: boolean;
+    showLocation?: boolean;
+    allowFriendRequest?: boolean;
+  }) {
+    try {
+      const response = await this.put('/users/privacy', privacyData);
+      console.log('Update privacy API response:', response.data);
+      return {
+        success: true,
+        data: response.data,
+        message: 'Privacy settings updated successfully'
+      };
+    } catch (error: any) {
+      console.error('Update privacy API error:', error.response?.data || error);
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Failed to update privacy settings'
+      };
+    }
+  }
+
+  async changePassword(passwordData: {
+    currentPassword: string;
+    newPassword: string;
+  }) {
+    try {
+      const response = await this.put('/users/password', passwordData);
+      console.log('Change password API response:', response.data);
+      return {
+        success: true,
+        data: response.data,
+        message: 'Password changed successfully'
+      };
+    } catch (error: any) {
+      console.error('Change password API error:', error.response?.data || error);
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Failed to change password'
+      };
+    }
+  }
+
   // Ping 相關方法
-  async getPings() {
-    const response = await this.get('/pings');
+  async getPings(params?: { limit?: number; offset?: number }) {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    
+    const url = `/pings/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await this.get(url);
     return response.data;
   }
 
-  async createPing(pingData: any) {
+  async createPing(pingData: {
+    title: string;
+    description?: string;
+    pingType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    scheduledAt: string; // ISO format
+    invitees: string[]; // Array of user IDs
+  }) {
     const response = await this.post('/pings', pingData);
+    return response.data;
+  }
+
+  async respondToPing(pingId: string, responseData: {
+    status: 'accepted' | 'declined';
+    message?: string;
+  }) {
+    const response = await this.put(`/pings/${pingId}/respond`, responseData);
     return response.data;
   }
 
@@ -179,11 +315,60 @@ export class ApiService {
     return response.data;
   }
 
-  // Token 管理方法
-  setAuthToken(token: string) {
-    this.authToken = token;
+  // Dashboard 統計方法
+  async getDashboardStats() {
+    const response = await this.get('/dashboard/stats');
+    return response.data;
   }
 
+  // 餐廳搜尋方法
+  async searchRestaurants(params: {
+    lat?: number;
+    lon?: number;
+    radius?: number;
+    limit?: number;
+    offset?: number;
+    minRating?: number;
+    cuisineTypes?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  }) {
+    const queryParams = new URLSearchParams();
+    
+    if (params.lat) queryParams.append('lat', params.lat.toString());
+    if (params.lon) queryParams.append('lon', params.lon.toString());
+    if (params.radius) queryParams.append('radius', params.radius.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.offset) queryParams.append('offset', params.offset.toString());
+    if (params.minRating) queryParams.append('minRating', params.minRating.toString());
+    if (params.cuisineTypes) queryParams.append('cuisineTypes', params.cuisineTypes);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+
+    const response = await this.get(`/restaurants/?${queryParams.toString()}`);
+    return response.data;
+  }
+
+  // 餐廳推薦方法
+  async getRestaurantRecommendations(data: {
+    participantLocations: Array<{ latitude: number; longitude: number }>;
+    cuisinePreferences?: string[];
+    priceRange?: { min: number; max: number };
+    dietaryRestrictions?: string[];
+    maxDistance?: number;
+    maxResults?: number;
+  }) {
+    const response = await this.post('/restaurants/recommendations', data);
+    return response.data;
+  }
+
+  // 根據 ID 獲取餐廳詳情
+  async getRestaurantById(id: string) {
+    const response = await this.get(`/restaurants/${id}`);
+    return response.data;
+  }
+
+  // Token 管理方法
   async getAuthToken(): Promise<string | null> {
     // 優先使用記憶體中的 token
     if (this.authToken) {
@@ -207,9 +392,14 @@ export class ApiService {
     return null;
   }
 
-  clearAuthToken() {
+  async clearAuthToken() {
     this.authToken = null;
-    AsyncStorage.removeItem('token');
+    try {
+      await AsyncStorage.removeItem('token');
+      console.log('Token cleared from memory and AsyncStorage');
+    } catch (error) {
+      console.error('Error clearing token from AsyncStorage:', error);
+    }
   }
 }
 

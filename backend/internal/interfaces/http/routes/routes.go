@@ -12,6 +12,8 @@ type Router struct {
 	friendshipHandler *handlers.FriendshipHandler
 	pingHandler *handlers.PingHandler
 	restaurantHandler *handlers.RestaurantHandler
+	statisticsHandler *handlers.StatisticsHandler
+	dashboardHandler *handlers.DashboardHandler
 	authMiddleware *middleware.AuthMiddleware
 }
 
@@ -21,6 +23,8 @@ func NewRouter(
 	friendshipHandler *handlers.FriendshipHandler, 
 	pingHandler *handlers.PingHandler, 
 	restaurantHandler *handlers.RestaurantHandler,
+	statisticsHandler *handlers.StatisticsHandler,
+	dashboardHandler *handlers.DashboardHandler,
 	authMiddleware *middleware.AuthMiddleware,
 ) *Router {
 	return &Router{
@@ -29,6 +33,8 @@ func NewRouter(
 		friendshipHandler: friendshipHandler,
 		pingHandler: pingHandler,
 		restaurantHandler: restaurantHandler,
+		statisticsHandler: statisticsHandler,
+		dashboardHandler: dashboardHandler,
 		authMiddleware: authMiddleware,
 	}
 }
@@ -144,10 +150,16 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 		// 	reviews.GET("/", r.restaurantReviewHandler.GetUserReviews)
 		// }
 		
-		// User Statistics routes (temporarily disabled)
+		// User Statistics routes (temporarily disabled - needs full activity/review system)
 		// statistics := protected.Group("/statistics")
 		// {
 		// 	statistics.GET("/", r.statisticsHandler.GetUserStatistics)
 		// }
+		
+		// Dashboard routes
+		dashboard := protected.Group("/dashboard")
+		{
+			dashboard.GET("/stats", r.dashboardHandler.GetDashboardStats)
+		}
 	}
 }

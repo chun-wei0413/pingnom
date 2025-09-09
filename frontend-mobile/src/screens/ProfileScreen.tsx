@@ -9,11 +9,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootState } from '../store';
+import type { ProfileStackParamList } from '../navigation/AppNavigator';
 import { logout } from '../store/authSlice';
+
+type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
+  const navigation = useNavigation<ProfileNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
@@ -32,11 +38,23 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    Alert.alert('功能開發中', '個人資料編輯功能正在開發中...');
+    navigation.navigate('EditProfile');
+  };
+
+  const handlePreferences = () => {
+    navigation.navigate('Preferences');
+  };
+
+  const handlePrivacy = () => {
+    navigation.navigate('Privacy');
+  };
+
+  const handleChangePassword = () => {
+    navigation.navigate('ChangePassword');
   };
 
   const handleSettings = () => {
-    Alert.alert('功能開發中', '設定功能正在開發中...');
+    Alert.alert('功能開發中', '其他設定功能正在開發中...');
   };
 
   const renderMenuOption = (title: string, subtitle: string, onPress: () => void, isDestructive = false) => (
@@ -81,9 +99,19 @@ export default function ProfileScreen() {
             handleEditProfile
           )}
           {renderMenuOption(
+            '偏好設定',
+            '管理飲食偏好和價格範圍',
+            handlePreferences
+          )}
+          {renderMenuOption(
             '隱私設定',
             '管理隱私和安全設定',
-            handleSettings
+            handlePrivacy
+          )}
+          {renderMenuOption(
+            '變更密碼',
+            '更改您的登入密碼',
+            handleChangePassword
           )}
           {renderMenuOption(
             '通知設定',

@@ -26,7 +26,7 @@ export const login = createAsyncThunk(
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await api.login(credentials.email, credentials.password);
-      await AsyncStorage.setItem('token', response.token);
+      // Token 已經在 api.login 中設置，不需要重複設置
       await AsyncStorage.setItem('user', JSON.stringify(response.user));
       return response;
     } catch (error: any) {
@@ -69,7 +69,8 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      AsyncStorage.removeItem('token');
+      // 清除 API 服務中的 token
+      api.clearAuthToken();
       AsyncStorage.removeItem('user');
       state.user = null;
       state.token = null;
@@ -78,6 +79,11 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    updateUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      // 同步更新到 AsyncStorage
+      AsyncStorage.setItem('user', JSON.stringify(action.payload));
     },
   },
   extraReducers: (builder) => {
@@ -127,5 +133,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, updateUser } = authSlice.actions;
 export default authSlice.reducer;

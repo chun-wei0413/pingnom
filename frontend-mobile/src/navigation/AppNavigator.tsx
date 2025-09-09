@@ -10,11 +10,17 @@ import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import PreferencesScreen from '../screens/PreferencesScreen';
+import PrivacyScreen from '../screens/PrivacyScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import GroupDiningScreen from '../screens/GroupDiningScreen';
 import CreateGroupDiningPlanScreen from '../screens/CreateGroupDiningPlanScreen';
 import GroupDiningPlanDetailScreen from '../screens/GroupDiningPlanDetailScreen';
 import VotingScreen from '../screens/VotingScreen';
 import VotingResultsScreen from '../screens/VotingResultsScreen';
+import RestaurantSearchScreen from '../screens/RestaurantSearchScreen';
+import CreatePingScreen from '../screens/CreatePingScreen';
 
 // Navigation type definitions
 export type RootStackParamList = {
@@ -34,18 +40,29 @@ export type MainTabParamList = {
   Profile: undefined;
 };
 
+export type ProfileStackParamList = {
+  ProfileHome: undefined;
+  EditProfile: undefined;
+  Preferences: undefined;
+  Privacy: undefined;
+  ChangePassword: undefined;
+};
+
 export type GroupDiningStackParamList = {
   GroupDiningHome: undefined;
   CreateGroupDiningPlan: undefined;
   GroupDiningPlanDetail: { planId: string };
   Voting: { planId: string };
   VotingResults: { planId: string };
+  RestaurantSearch: undefined;
+  CreatePing: undefined;
 };
 
 const RootStack = createStackNavigator<RootStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
 const GroupDiningStack = createStackNavigator<GroupDiningStackParamList>();
+const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
 // Auth Navigator
 function AuthNavigator() {
@@ -53,6 +70,60 @@ function AuthNavigator() {
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
     </AuthStack.Navigator>
+  );
+}
+
+// Profile Stack Navigator
+function ProfileNavigator() {
+  return (
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#3b82f6',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <ProfileStack.Screen 
+        name="ProfileHome" 
+        component={ProfileScreen}
+        options={{
+          title: '個人資料',
+          headerShown: false,
+        }}
+      />
+      <ProfileStack.Screen 
+        name="EditProfile" 
+        component={EditProfileScreen}
+        options={{
+          title: '編輯個人資料',
+        }}
+      />
+      <ProfileStack.Screen 
+        name="Preferences" 
+        component={PreferencesScreen}
+        options={{
+          title: '偏好設定',
+        }}
+      />
+      <ProfileStack.Screen 
+        name="Privacy" 
+        component={PrivacyScreen}
+        options={{
+          title: '隱私設定',
+        }}
+      />
+      <ProfileStack.Screen 
+        name="ChangePassword" 
+        component={ChangePasswordScreen}
+        options={{
+          title: '變更密碼',
+        }}
+      />
+    </ProfileStack.Navigator>
   );
 }
 
@@ -106,6 +177,20 @@ function GroupDiningNavigator() {
           title: '投票結果',
         }}
       />
+      <GroupDiningStack.Screen 
+        name="RestaurantSearch" 
+        component={RestaurantSearchScreen}
+        options={{
+          title: '餐廳搜尋',
+        }}
+      />
+      <GroupDiningStack.Screen 
+        name="CreatePing" 
+        component={CreatePingScreen}
+        options={{
+          title: '發起聚餐',
+        }}
+      />
     </GroupDiningStack.Navigator>
   );
 }
@@ -150,7 +235,7 @@ function MainNavigator() {
       />
       <MainTab.Screen 
         name="Profile" 
-        component={ProfileScreen}
+        component={ProfileNavigator}
         options={{
           title: '個人',
           headerShown: false,

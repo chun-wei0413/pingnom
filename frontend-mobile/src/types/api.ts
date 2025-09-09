@@ -52,16 +52,18 @@ export interface FriendRequest {
 // Ping 相關
 export interface Ping {
   id: string;
-  created_by: string;
+  createdBy: string;
   title: string;
   description: string;
-  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  scheduled_time?: string;
-  invitee_ids: string[];
+  pingType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  scheduledAt: string;
   responses: PingResponse[];
-  status: 'active' | 'responded' | 'cancelled';
-  created_at: string;
-  updated_at: string;
+  status: 'active' | 'responded' | 'cancelled' | 'pending' | 'accepted' | 'declined';
+  inviteeCount: number;
+  acceptedCount: number;
+  pendingCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PingResponse {
