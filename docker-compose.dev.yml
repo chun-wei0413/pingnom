@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: pingnom-postgres-dev
+    environment:
+      POSTGRES_DB: pingnom_dev
+      POSTGRES_USER: pingnom_user
+      POSTGRES_PASSWORD: pingnom_dev_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - pingnom-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pingnom_user -d pingnom_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis for Caching (Future use)
+  redis-dev:
+    image: redis:7-alpine
+    container_name: pingnom-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - pingnom-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # pgAdmin for Database Management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pingnom-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pingnom.app
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-dev
+    networks:
+      - pingnom-network
+
+volumes:
+  postgres_data:
+
+networks:
+  pingnom-network:
+    driver: bridge

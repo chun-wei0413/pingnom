@@ -13,6 +13,11 @@ dist/
 build/
 coverage/
 
+# 開發環境檔案
+frontend-mobile/.env
+backend/.env
+scripts/dev-logs/
+
 # IDE 檔案
 .vscode/
 .idea/
