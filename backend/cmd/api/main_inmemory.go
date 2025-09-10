@@ -14,14 +14,17 @@ import (
 	usercommands "github.com/chun-wei0413/pingnom/internal/application/commands/user"
 	friendshipcommands "github.com/chun-wei0413/pingnom/internal/application/commands/friendship"
 	pingcommands "github.com/chun-wei0413/pingnom/internal/application/commands/ping"
+	billcommands "github.com/chun-wei0413/pingnom/internal/application/commands/bill"
 	userqueries "github.com/chun-wei0413/pingnom/internal/application/queries/user"
 	friendshipqueries "github.com/chun-wei0413/pingnom/internal/application/queries/friendship"
 	pingqueries "github.com/chun-wei0413/pingnom/internal/application/queries/ping"
 	restaurantqueries "github.com/chun-wei0413/pingnom/internal/application/queries/restaurant"
+	billqueries "github.com/chun-wei0413/pingnom/internal/application/queries/bill"
 	"github.com/chun-wei0413/pingnom/internal/domain/user"
 	"github.com/chun-wei0413/pingnom/internal/domain/friendship"
 	"github.com/chun-wei0413/pingnom/internal/domain/ping"
 	"github.com/chun-wei0413/pingnom/internal/domain/restaurant"
+	"github.com/chun-wei0413/pingnom/internal/domain/bill"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/auth"
 	"github.com/chun-wei0413/pingnom/internal/infrastructure/inmemory"
 	friendshipInmemory "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
@@ -43,6 +46,7 @@ func main() {
 	friendshipRepo := friendshipInmemory.NewInMemoryFriendshipRepository()
 	pingRepo := pingInmemory.NewPingRepository()
 	restaurantRepo := restaurantInmemory.NewRestaurantRepository()
+	billRepo := inmemory.NewInMemoryBillRepository()
 	
 	// Group Dining repositories
 	groupDiningPlanRepo := groupdiningrepos.NewGroupDiningPlanRepositoryInMemory()
@@ -53,6 +57,7 @@ func main() {
 	friendshipService := friendship.NewFriendshipService(friendshipRepo)
 	pingService := ping.NewService(pingRepo)
 	restaurantRecommendationService := restaurant.NewRecommendationService(restaurantRepo)
+	billService := bill.NewService(billRepo)
 	
 	// 暫時移除統計功能，太複雜
 	// 創建空的統計 handler 以避免編譯錯誤
@@ -98,6 +103,16 @@ func main() {
 	searchRestaurantsHandler := restaurantqueries.NewSearchRestaurantsHandler(restaurantRepo)
 	getRestaurantRecommendationsHandler := restaurantqueries.NewGetRestaurantRecommendationsHandler(restaurantRecommendationService)
 	
+	// 依賴注入 - 建立 Bill Command Handlers
+	createBillHandler := billcommands.NewCreateBillHandler(billService)
+	addItemHandler := billcommands.NewAddItemHandler(billService, billRepo)
+	addParticipantHandler := billcommands.NewAddParticipantHandler(billService, billRepo)
+	markPaidHandler := billcommands.NewMarkPaidHandler(billService, billRepo)
+	
+	// 依賴注入 - 建立 Bill Query Handlers
+	getBillHandler := billqueries.NewGetBillHandler(billService, billRepo)
+	getUserBillsHandler := billqueries.NewGetUserBillsHandler(billRepo)
+	
 	// 依賴注入 - 建立 Group Dining Service & Controller
 	groupDiningService := services.NewGroupDiningService(groupDiningPlanRepo, voteRepo)
 	groupDiningController := controllers.NewGroupDiningController(groupDiningService)
@@ -134,6 +149,14 @@ func main() {
 	restaurantHandler := handlers.NewRestaurantHandler(
 		searchRestaurantsHandler,
 		getRestaurantRecommendationsHandler,
+	)
+	billHandler := handlers.NewBillHandler(
+		createBillHandler,
+		addItemHandler,
+		addParticipantHandler,
+		markPaidHandler,
+		getBillHandler,
+		getUserBillsHandler,
 	)
 	
 	// Dashboard handler
@@ -176,6 +199,21 @@ func main() {
 		
 		// Finalize Plan
 		groupDining.POST("/plans/:id/finalize", groupDiningController.FinalizeGroupDiningPlan)
+	}
+	
+	// Bill 路由 (Require Auth)
+	bills := engine.Group("/api/v1/bills")
+	bills.Use(authMiddleware.RequireAuth())
+	{
+		// Create & Get Bills
+		bills.POST("/", billHandler.CreateBill)
+		bills.GET("/:id", billHandler.GetBill)
+		bills.GET("/", billHandler.GetUserBills)
+		
+		// Manage Bill Items & Participants
+		bills.POST("/:id/items", billHandler.AddItem)
+		bills.POST("/:id/participants", billHandler.AddParticipant)
+		bills.PUT("/:id/payments", billHandler.MarkPaid)
 	}
 	
 	// 建立 HTTP 服務器

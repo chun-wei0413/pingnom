@@ -49,6 +49,14 @@ var (
 	ErrReviewNotFound          = errors.New("review not found")
 	ErrReviewAlreadyExists     = errors.New("review already exists for this activity")
 	ErrInvalidRating          = errors.New("rating must be between 1 and 5")
+	
+	// Bill Domain Errors
+	ErrBillNotFound           = errors.New("bill not found")
+	ErrBillItemNotFound       = errors.New("bill item not found")
+	ErrParticipantNotFound    = errors.New("participant not found")
+	ErrInvalidBillStatus      = errors.New("invalid bill status")
+	ErrBillAlreadyCompleted   = errors.New("bill is already completed")
+	ErrCannotModifyCompletedBill = errors.New("cannot modify completed bill")
 )
 
 type DomainError struct {

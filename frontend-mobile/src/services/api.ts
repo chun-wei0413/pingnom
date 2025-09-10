@@ -368,6 +368,49 @@ export class ApiService {
     return response.data;
   }
 
+  // 帳單相關方法
+  async createBill(data: { title: string; description?: string }) {
+    const response = await this.post('/bills', data);
+    return response.data;
+  }
+
+  async getBill(billId: string) {
+    const response = await this.get(`/bills/${billId}`);
+    return response.data;
+  }
+
+  async getUserBills(filter?: string) {
+    const queryString = filter ? `?filter=${filter}` : '';
+    const response = await this.get(`/bills${queryString}`);
+    return response.data;
+  }
+
+  async addBillItem(billId: string, data: {
+    name: string;
+    amount: number;
+    description?: string;
+    payerIds: string[];
+  }) {
+    const response = await this.post(`/bills/${billId}/items`, data);
+    return response.data;
+  }
+
+  async addBillParticipant(billId: string, data: {
+    userId: string;
+    displayName: string;
+  }) {
+    const response = await this.post(`/bills/${billId}/participants`, data);
+    return response.data;
+  }
+
+  async markBillPaid(billId: string, data: {
+    userId: string;
+    amount: number;
+  }) {
+    const response = await this.put(`/bills/${billId}/payments`, data);
+    return response.data;
+  }
+
   // Token 管理方法
   async getAuthToken(): Promise<string | null> {
     // 優先使用記憶體中的 token

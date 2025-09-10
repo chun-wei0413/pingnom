@@ -79,6 +79,11 @@ func ParseUserID(id string) (UserID, error) {
 	return NewUserIDFromString(id)
 }
 
+func UserIDFromString(id string) UserID {
+	userID, _ := NewUserIDFromString(id)
+	return userID
+}
+
 func NewUserIDFromString(id string) (UserID, error) {
 	if strings.TrimSpace(id) == "" {
 		return UserID{}, errors.New("user ID cannot be empty")

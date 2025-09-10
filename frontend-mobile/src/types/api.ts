@@ -200,3 +200,80 @@ export interface VotingResults {
   time_slots: TimeSlot[];
   restaurants: RestaurantOption[];
 }
+
+// 帳單相關類型
+export interface BillItem {
+  id: string;
+  name: string;
+  amount: number;
+  description?: string;
+  payerIds: string[];
+  createdAt: string;
+}
+
+export interface BillParticipant {
+  userId: string;
+  displayName: string;
+  totalAmount: number;
+  paidAmount: number;
+  isPaid: boolean;
+  balance: number;
+}
+
+export interface Bill {
+  id: string;
+  title: string;
+  description?: string;
+  creatorId: string;
+  items: BillItem[];
+  participants: { [userId: string]: BillParticipant };
+  totalAmount: number;
+  status: 'draft' | 'active' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBillRequest {
+  title: string;
+  description?: string;
+}
+
+export interface CreateBillResponse {
+  billId: string;
+  title: string;
+  description?: string;
+  creatorId: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface AddItemRequest {
+  name: string;
+  amount: number;
+  description?: string;
+  payerIds: string[];
+}
+
+export interface AddItemResponse {
+  itemId: string;
+  name: string;
+  amount: number;
+  description?: string;
+  payerIds: string[];
+  createdAt: string;
+}
+
+export interface AddParticipantRequest {
+  userId: string;
+  displayName: string;
+}
+
+export interface MarkPaidRequest {
+  userId: string;
+  amount: number;
+}
+
+export interface GetUserBillsResponse {
+  bills: Bill[];
+  total: number;
+}

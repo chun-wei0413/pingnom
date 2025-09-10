@@ -21,6 +21,9 @@ import VotingScreen from '../screens/VotingScreen';
 import VotingResultsScreen from '../screens/VotingResultsScreen';
 import RestaurantSearchScreen from '../screens/RestaurantSearchScreen';
 import CreatePingScreen from '../screens/CreatePingScreen';
+import BillsScreen from '../screens/BillsScreen';
+import CreateBillScreen from '../screens/CreateBillScreen';
+import BillDetailScreen from '../screens/BillDetailScreen';
 
 // Navigation type definitions
 export type RootStackParamList = {
@@ -36,6 +39,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Dashboard: undefined;
   GroupDining: undefined;
+  Bills: undefined;
   Friends: undefined;
   Profile: undefined;
 };
@@ -58,10 +62,19 @@ export type GroupDiningStackParamList = {
   CreatePing: undefined;
 };
 
+export type BillsStackParamList = {
+  BillsHome: undefined;
+  CreateBill: undefined;
+  BillDetail: { billId: string };
+  AddBillItem: { billId: string };
+  AddBillParticipant: { billId: string };
+};
+
 const RootStack = createStackNavigator<RootStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
 const GroupDiningStack = createStackNavigator<GroupDiningStackParamList>();
+const BillsStack = createStackNavigator<BillsStackParamList>();
 const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
 // Auth Navigator
@@ -195,6 +208,48 @@ function GroupDiningNavigator() {
   );
 }
 
+// Bills Stack Navigator
+function BillsNavigator() {
+  return (
+    <BillsStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#3b82f6',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <BillsStack.Screen 
+        name="BillsHome" 
+        component={BillsScreen}
+        options={{
+          title: '帳單分攤',
+          headerShown: false,
+        }}
+      />
+      <BillsStack.Screen 
+        name="CreateBill" 
+        component={CreateBillScreen}
+        options={{
+          title: '建立帳單',
+          headerShown: false,
+        }}
+      />
+      <BillsStack.Screen 
+        name="BillDetail" 
+        component={BillDetailScreen}
+        options={{
+          title: '帳單詳情',
+          headerShown: false,
+        }}
+      />
+    </BillsStack.Navigator>
+  );
+}
+
 // Main Tab Navigator
 function MainNavigator() {
   return (
@@ -222,6 +277,14 @@ function MainNavigator() {
         component={GroupDiningNavigator}
         options={{
           title: '聚餐',
+          headerShown: false,
+        }}
+      />
+      <MainTab.Screen 
+        name="Bills" 
+        component={BillsNavigator}
+        options={{
+          title: '帳單',
           headerShown: false,
         }}
       />
