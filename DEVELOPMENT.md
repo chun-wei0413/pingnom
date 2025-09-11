@@ -2,22 +2,20 @@
 
 ## 📋 快速啟動
 
-### 🚀 一鍵啟動開發環境
+### 🚀 手動啟動開發環境 (推薦)
 ```bash
-# Windows
-scripts\dev-start.bat
+# 終端 1: 啟動後端 API 服務
+cd backend
+./main_inmemory.exe
 
-# 或手動啟動
-npm run dev:start
+# 終端 2: 啟動前端 React Native 服務
+cd frontend-mobile
+npm start
 ```
 
 ### ⏹️ 停止開發環境
 ```bash
-# Windows  
-scripts\dev-stop.bat
-
-# 或手動停止
-npm run dev:stop
+# 在各自終端使用 Ctrl+C 停止服務
 ```
 
 ## 🔧 開發環境配置
