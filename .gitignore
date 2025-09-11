@@ -1,5 +1,4 @@
 # Claude 相關檔案
-CLAUDE.md
 .claude/
 
 # 常見的忽略檔案
@@ -12,6 +11,23 @@ node_modules/
 dist/
 build/
 coverage/
+
+# 測試產物和截圖檔案
+test-results/
+playwright-report/
+frontend-mobile/test-results/
+frontend-mobile/playwright-report/
+frontend-mobile/coverage/
+tests/*.png
+tests/*.jpg
+tests/*.jpeg
+tests/*.gif
+tests/*.webp
+**/*test*.png
+**/*test*.jpg
+**/*test*.jpeg
+**/*screenshot*.png
+**/*screenshot*.jpg
 
 # 開發環境檔案
 frontend-mobile/.env
