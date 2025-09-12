@@ -24,6 +24,9 @@ import CreatePingScreen from '../screens/CreatePingScreen';
 import BillsScreen from '../screens/BillsScreen';
 import CreateBillScreen from '../screens/CreateBillScreen';
 import BillDetailScreen from '../screens/BillDetailScreen';
+import GroupsScreen from '../screens/GroupsScreen';
+import CreateGroupScreen from '../screens/CreateGroupScreen';
+import GroupDetailScreen from '../screens/GroupDetailScreen';
 
 // Navigation type definitions
 export type RootStackParamList = {
@@ -39,6 +42,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Dashboard: undefined;
   GroupDining: undefined;
+  Groups: undefined;
   Bills: undefined;
   Friends: undefined;
   Profile: undefined;
@@ -62,6 +66,12 @@ export type GroupDiningStackParamList = {
   CreatePing: undefined;
 };
 
+export type GroupsStackParamList = {
+  GroupsHome: undefined;
+  CreateGroup: undefined;
+  GroupDetail: { groupId: string };
+};
+
 export type BillsStackParamList = {
   BillsHome: undefined;
   CreateBill: undefined;
@@ -74,6 +84,7 @@ const RootStack = createStackNavigator<RootStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
 const GroupDiningStack = createStackNavigator<GroupDiningStackParamList>();
+const GroupsStack = createStackNavigator<GroupsStackParamList>();
 const BillsStack = createStackNavigator<BillsStackParamList>();
 const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
@@ -208,6 +219,48 @@ function GroupDiningNavigator() {
   );
 }
 
+// Groups Stack Navigator
+function GroupsNavigator() {
+  return (
+    <GroupsStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#3b82f6',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <GroupsStack.Screen 
+        name="GroupsHome" 
+        component={GroupsScreen}
+        options={{
+          title: '群組管理',
+          headerShown: false,
+        }}
+      />
+      <GroupsStack.Screen 
+        name="CreateGroup" 
+        component={CreateGroupScreen}
+        options={{
+          title: '建立群組',
+          headerShown: false,
+        }}
+      />
+      <GroupsStack.Screen 
+        name="GroupDetail" 
+        component={GroupDetailScreen}
+        options={{
+          title: '群組詳情',
+          headerShown: false,
+        }}
+      />
+    </GroupsStack.Navigator>
+  );
+}
+
 // Bills Stack Navigator
 function BillsNavigator() {
   return (
@@ -277,6 +330,14 @@ function MainNavigator() {
         component={GroupDiningNavigator}
         options={{
           title: '聚餐',
+          headerShown: false,
+        }}
+      />
+      <MainTab.Screen 
+        name="Groups" 
+        component={GroupsNavigator}
+        options={{
+          title: '群組',
           headerShown: false,
         }}
       />
