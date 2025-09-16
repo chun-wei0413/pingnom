@@ -32,7 +32,12 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			return
 		}
 		
-		println("📋 Auth Middleware - Auth header present:", authHeader[:20]+"...")
+		// 安全地顯示授權標頭
+		headerPreview := authHeader
+		if len(authHeader) > 20 {
+			headerPreview = authHeader[:20] + "..."
+		}
+		println("📋 Auth Middleware - Auth header present:", headerPreview)
 		
 		// 檢查 Bearer token 格式
 		parts := strings.SplitN(authHeader, " ", 2)
@@ -46,7 +51,12 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 		}
 		
 		tokenString := parts[1]
-		println("🎫 Auth Middleware - Token extracted:", tokenString[:20]+"...")
+		// 安全地顯示 token
+		tokenPreview := tokenString
+		if len(tokenString) > 20 {
+			tokenPreview = tokenString[:20] + "..."
+		}
+		println("🎫 Auth Middleware - Token extracted:", tokenPreview)
 		
 		// 使用 JWT 服務驗證 token
 		claims, err := m.jwtService.ValidateToken(tokenString)
