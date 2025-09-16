@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import { api } from '../services/api';
+import { groupApi } from '../services/groupApi';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 type CreateGroupNavigationProp = StackNavigationProp<any>;
@@ -86,7 +86,7 @@ export default function CreateGroupScreen() {
       };
 
       console.log('Creating group with data:', groupData);
-      const response = await api.createGroup(groupData);
+      const response = await groupApi.createGroup(groupData);
       console.log('Group created:', response);
 
       Alert.alert(

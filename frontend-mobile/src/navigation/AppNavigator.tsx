@@ -27,6 +27,9 @@ import BillDetailScreen from '../screens/BillDetailScreen';
 import GroupsScreen from '../screens/GroupsScreen';
 import CreateGroupScreen from '../screens/CreateGroupScreen';
 import GroupDetailScreen from '../screens/GroupDetailScreen';
+import ActivityHistoryScreen from '../screens/ActivityHistoryScreen';
+import CreateActivityScreen from '../screens/CreateActivityScreen';
+import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 
 // Navigation type definitions
 export type RootStackParamList = {
@@ -44,6 +47,7 @@ export type MainTabParamList = {
   GroupDining: undefined;
   Groups: undefined;
   Bills: undefined;
+  Activities: undefined;
   Friends: undefined;
   Profile: undefined;
 };
@@ -80,12 +84,19 @@ export type BillsStackParamList = {
   AddBillParticipant: { billId: string };
 };
 
+export type ActivitiesStackParamList = {
+  ActivitiesHome: undefined;
+  CreateActivity: undefined;
+  ActivityDetail: { activityId: string };
+};
+
 const RootStack = createStackNavigator<RootStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
 const GroupDiningStack = createStackNavigator<GroupDiningStackParamList>();
 const GroupsStack = createStackNavigator<GroupsStackParamList>();
 const BillsStack = createStackNavigator<BillsStackParamList>();
+const ActivitiesStack = createStackNavigator<ActivitiesStackParamList>();
 const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
 // Auth Navigator
@@ -275,24 +286,24 @@ function BillsNavigator() {
         },
       }}
     >
-      <BillsStack.Screen 
-        name="BillsHome" 
+      <BillsStack.Screen
+        name="BillsHome"
         component={BillsScreen}
         options={{
           title: '帳單分攤',
           headerShown: false,
         }}
       />
-      <BillsStack.Screen 
-        name="CreateBill" 
+      <BillsStack.Screen
+        name="CreateBill"
         component={CreateBillScreen}
         options={{
           title: '建立帳單',
           headerShown: false,
         }}
       />
-      <BillsStack.Screen 
-        name="BillDetail" 
+      <BillsStack.Screen
+        name="BillDetail"
         component={BillDetailScreen}
         options={{
           title: '帳單詳情',
@@ -300,6 +311,48 @@ function BillsNavigator() {
         }}
       />
     </BillsStack.Navigator>
+  );
+}
+
+// Activities Stack Navigator
+function ActivitiesNavigator() {
+  return (
+    <ActivitiesStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#3b82f6',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <ActivitiesStack.Screen
+        name="ActivitiesHome"
+        component={ActivityHistoryScreen}
+        options={{
+          title: '活動歷史',
+          headerShown: false,
+        }}
+      />
+      <ActivitiesStack.Screen
+        name="CreateActivity"
+        component={CreateActivityScreen}
+        options={{
+          title: '新增活動',
+          headerShown: false,
+        }}
+      />
+      <ActivitiesStack.Screen
+        name="ActivityDetail"
+        component={ActivityDetailScreen}
+        options={{
+          title: '活動詳情',
+          headerShown: false,
+        }}
+      />
+    </ActivitiesStack.Navigator>
   );
 }
 
@@ -341,24 +394,32 @@ function MainNavigator() {
           headerShown: false,
         }}
       />
-      <MainTab.Screen 
-        name="Bills" 
+      <MainTab.Screen
+        name="Bills"
         component={BillsNavigator}
         options={{
           title: '帳單',
           headerShown: false,
         }}
       />
-      <MainTab.Screen 
-        name="Friends" 
+      <MainTab.Screen
+        name="Activities"
+        component={ActivitiesNavigator}
+        options={{
+          title: '歷史',
+          headerShown: false,
+        }}
+      />
+      <MainTab.Screen
+        name="Friends"
         component={FriendsScreen}
         options={{
           title: '朋友',
           headerShown: false,
         }}
       />
-      <MainTab.Screen 
-        name="Profile" 
+      <MainTab.Screen
+        name="Profile"
         component={ProfileNavigator}
         options={{
           title: '個人',

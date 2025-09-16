@@ -277,3 +277,42 @@ export interface GetUserBillsResponse {
   bills: Bill[];
   total: number;
 }
+
+// Activity History 相關類型
+export interface ActivityHistory {
+  id: string;
+  groupDiningId: string;
+  restaurantId: string;
+  restaurantName: string;
+  attendedAt: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  participants: number;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateActivityHistoryRequest {
+  groupDiningId: string;
+  restaurantId: string;
+  restaurantName: string;
+  attendedAt: string;
+  participants: number;
+}
+
+export interface UpdateActivityHistoryRequest {
+  status?: 'pending' | 'completed' | 'cancelled';
+  participants?: number;
+  notes?: string;
+}
+
+export interface GetActivityHistoryQuery {
+  status?: 'pending' | 'completed' | 'cancelled';
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetActivityHistoryResponse {
+  activities: ActivityHistory[];
+  total: number;
+}

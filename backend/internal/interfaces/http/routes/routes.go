@@ -14,17 +14,19 @@ type Router struct {
 	restaurantHandler *handlers.RestaurantHandler
 	statisticsHandler *handlers.StatisticsHandler
 	dashboardHandler *handlers.DashboardHandler
+	activityHistoryHandler *handlers.ActivityHistoryHandler
 	authMiddleware *middleware.AuthMiddleware
 }
 
 func NewRouter(
-	userHandler *handlers.UserHandler, 
-	authHandler *handlers.AuthHandler, 
-	friendshipHandler *handlers.FriendshipHandler, 
-	pingHandler *handlers.PingHandler, 
+	userHandler *handlers.UserHandler,
+	authHandler *handlers.AuthHandler,
+	friendshipHandler *handlers.FriendshipHandler,
+	pingHandler *handlers.PingHandler,
 	restaurantHandler *handlers.RestaurantHandler,
 	statisticsHandler *handlers.StatisticsHandler,
 	dashboardHandler *handlers.DashboardHandler,
+	activityHistoryHandler *handlers.ActivityHistoryHandler,
 	authMiddleware *middleware.AuthMiddleware,
 ) *Router {
 	return &Router{
@@ -35,6 +37,7 @@ func NewRouter(
 		restaurantHandler: restaurantHandler,
 		statisticsHandler: statisticsHandler,
 		dashboardHandler: dashboardHandler,
+		activityHistoryHandler: activityHistoryHandler,
 		authMiddleware: authMiddleware,
 	}
 }
@@ -134,13 +137,13 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			// restaurants.GET("/:restaurant_id/reviews", r.restaurantReviewHandler.GetRestaurantReviews)
 		}
 		
-		// Activity History routes (temporarily disabled)
-		// activities := protected.Group("/activities")
-		// {
-		// 	activities.POST("/", r.activityHistoryHandler.CreateActivityHistory)
-		// 	activities.PUT("/:id", r.activityHistoryHandler.UpdateActivityHistory)
-		// 	activities.GET("/", r.activityHistoryHandler.GetUserActivityHistory)
-		// }
+		// Activity History routes
+		activities := protected.Group("/activities")
+		{
+			activities.POST("/", r.activityHistoryHandler.CreateActivityHistory)
+			activities.PUT("/:id", r.activityHistoryHandler.UpdateActivityHistory)
+			activities.GET("/", r.activityHistoryHandler.GetUserActivityHistory)
+		}
 		
 		// Restaurant Review routes (temporarily disabled)
 		// reviews := protected.Group("/reviews")

@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import type { AuthResponse, LoginRequest, RegisterRequest } from '../types/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 // API 服務類別
 export class ApiService {
@@ -9,8 +10,13 @@ export class ApiService {
   private authToken: string | null = null;
 
   constructor() {
+    // 根據平台選擇正確的 API URL
+    const baseURL = Platform.OS === 'web'
+      ? 'http://localhost:8090/api/v1'  // Web 環境使用 localhost
+      : 'http://192.168.1.4:8090/api/v1'; // 手機使用局域網 IP
+
     this.api = axios.create({
-      baseURL: 'http://192.168.1.4:8090/api/v1', // 維持局域網 IP 給手機使用
+      baseURL,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -408,6 +414,46 @@ export class ApiService {
     amount: number;
   }) {
     const response = await this.put(`/bills/${billId}/payments`, data);
+    return response.data;
+  }
+
+  // Activity History 相關方法
+  async createActivityHistory(data: {
+    groupDiningId: string;
+    restaurantId: string;
+    restaurantName: string;
+    attendedAt: string;
+    participants: number;
+  }) {
+    const response = await this.post('/activities/', data);
+    return response.data;
+  }
+
+  async updateActivityHistory(activityId: string, data: {
+    status?: 'pending' | 'completed' | 'cancelled';
+    participants?: number;
+    notes?: string;
+  }) {
+    const response = await this.put(`/activities/${activityId}`, data);
+    return response.data;
+  }
+
+  async getUserActivityHistory(params: {
+    status?: 'pending' | 'completed' | 'cancelled';
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    const searchParams = new URLSearchParams();
+
+    if (params.status) searchParams.append('status', params.status);
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+    if (params.offset) searchParams.append('offset', params.offset.toString());
+
+    const url = searchParams.toString()
+      ? `/activities/?${searchParams.toString()}`
+      : '/activities/';
+
+    const response = await this.get(url);
     return response.data;
   }
 

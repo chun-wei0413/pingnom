@@ -16,12 +16,14 @@ import (
 	pingcommands "github.com/chun-wei0413/pingnom/internal/application/commands/ping"
 	billcommands "github.com/chun-wei0413/pingnom/internal/application/commands/bill"
 	groupcommands "github.com/chun-wei0413/pingnom/internal/application/commands/group"
+	activitycommands "github.com/chun-wei0413/pingnom/internal/application/commands/activity"
 	userqueries "github.com/chun-wei0413/pingnom/internal/application/queries/user"
 	friendshipqueries "github.com/chun-wei0413/pingnom/internal/application/queries/friendship"
 	pingqueries "github.com/chun-wei0413/pingnom/internal/application/queries/ping"
 	restaurantqueries "github.com/chun-wei0413/pingnom/internal/application/queries/restaurant"
 	billqueries "github.com/chun-wei0413/pingnom/internal/application/queries/bill"
 	groupqueries "github.com/chun-wei0413/pingnom/internal/application/queries/group"
+	activityqueries "github.com/chun-wei0413/pingnom/internal/application/queries/activity"
 	"github.com/chun-wei0413/pingnom/internal/domain/user"
 	"github.com/chun-wei0413/pingnom/internal/domain/friendship"
 	"github.com/chun-wei0413/pingnom/internal/domain/ping"
@@ -33,6 +35,7 @@ import (
 	friendshipInmemory "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
 	pingInmemory "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
 	restaurantInmemory "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
+	inmemorypersistence "github.com/chun-wei0413/pingnom/internal/infrastructure/persistence/inmemory"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/handlers"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/middleware"
 	"github.com/chun-wei0413/pingnom/internal/interfaces/http/routes"
@@ -51,6 +54,7 @@ func main() {
 	restaurantRepo := restaurantInmemory.NewRestaurantRepository()
 	billRepo := inmemory.NewInMemoryBillRepository()
 	groupRepo := inmemory.NewInMemoryGroupRepository()
+	activityRepo := inmemorypersistence.NewActivityHistoryInMemoryRepository()
 	
 	// Group Dining repositories
 	groupDiningPlanRepo := groupdiningrepos.NewGroupDiningPlanRepositoryInMemory()
@@ -130,6 +134,13 @@ func main() {
 	getGroupByIDHandler := groupqueries.NewGetGroupByIDHandler(groupRepo)
 	searchGroupsHandler := groupqueries.NewSearchGroupsHandler(groupRepo)
 	getGroupStatsHandler := groupqueries.NewGetGroupStatsHandler(groupRepo)
+
+	// 依賴注入 - 建立 Activity History Command Handlers
+	createActivityHistoryHandler := activitycommands.NewCreateActivityHistoryHandler(activityRepo)
+	updateActivityHistoryHandler := activitycommands.NewUpdateActivityHistoryHandler(activityRepo)
+
+	// 依賴注入 - 建立 Activity History Query Handlers
+	getUserActivityHistoryHandler := activityqueries.NewGetUserActivityHistoryHandler(activityRepo)
 	
 	// 依賴注入 - 建立 Group Dining Service & Controller
 	groupDiningService := services.NewGroupDiningService(groupDiningPlanRepo, voteRepo)
@@ -189,6 +200,13 @@ func main() {
 		searchGroupsHandler,
 		getGroupStatsHandler,
 	)
+
+	// 建立 Activity History Handler
+	activityHistoryHandler := handlers.NewActivityHistoryHandler(
+		createActivityHistoryHandler,
+		updateActivityHistoryHandler,
+		getUserActivityHistoryHandler,
+	)
 	
 	// Dashboard handler
 	dashboardHandler := handlers.NewDashboardHandler(friendshipRepo, pingRepo)
@@ -205,7 +223,7 @@ func main() {
 	engine.Use(corsMiddleware())
 	
 	// 使用新的 Router 來設定路由
-	router := routes.NewRouter(userHandler, authHandler, friendshipHandler, pingHandler, restaurantHandler, statisticsHandler, dashboardHandler, authMiddleware)
+	router := routes.NewRouter(userHandler, authHandler, friendshipHandler, pingHandler, restaurantHandler, statisticsHandler, dashboardHandler, activityHistoryHandler, authMiddleware)
 	router.SetupRoutes(engine)
 	
 	// Group Dining 路由 (Require Auth)
