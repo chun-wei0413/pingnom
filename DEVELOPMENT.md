@@ -6,7 +6,7 @@
 ```bash
 # 終端 1: 啟動後端 API 服務
 cd backend
-./main_inmemory.exe
+go run cmd/api/main_inmemory_with_groups.go
 
 # 終端 2: 啟動前端 React Native 服務
 cd frontend-mobile
@@ -34,7 +34,7 @@ npm start
 | 服務 | 端口 | 網址 | 用途 |
 |------|------|------|------|
 | **Backend API** | 8090 | http://localhost:8090 | REST API |
-| **Frontend Mobile** | 8100 | http://localhost:8100 | React Native + Expo |
+| **Frontend Mobile** | 8081 | http://localhost:8081 | React Native + Expo |
 | **Health Check** | 8090 | http://localhost:8090/health | 系統健康狀態 |
 
 ## 🧪 測試帳號
@@ -58,14 +58,14 @@ npm start
 curl http://localhost:8090/health
 
 # 檢查前端是否運行
-curl http://localhost:8100
+curl http://localhost:8081
 ```
 
 ### 常見端口衝突解決
 ```bash
 # 檢查端口使用狀況
 netstat -ano | findstr :8090
-netstat -ano | findstr :8100
+netstat -ano | findstr :8081
 
 # 強制停止特定端口的程序
 taskkill /f /pid <PID>
@@ -166,11 +166,11 @@ npx expo install --fix
 
 ## 🎯 下一步開發重點
 
-1. **準備生產環境PostgreSQL配置** 
-2. **建立CI/CD Pipeline基礎結構**
-3. **建立環境變數管理系統**
-4. **部署到雲端服務** 
-5. **發布移動應用到應用商店**
+1. **實作實時通知系統 (WebSocket + Push Notifications)**
+2. **活動歷史與統計分析功能**
+3. **餐廳評分與評論系統**
+4. **實時聊天功能整合**
+5. **準備生產環境部署 (PostgreSQL + 雲端服務)**
 
 ---
 
